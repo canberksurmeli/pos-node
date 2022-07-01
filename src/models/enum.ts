@@ -12,9 +12,8 @@ export enum Provider {
 	Asseco = "Asseco",
 	Ziraat = "Ziraat",
 }
-
 export enum ProviderUrl {
-	Asseco = "https://testvpos.asseco-see.com.tr/fim/api",
+	Asseco = "https://entegrasyon.asseco-see.com.tr/fim/est3Dgate",
 	Ziraat = "https://sanalpos2.ziraatbank.com.tr/fim/api",
 }
 
@@ -37,6 +36,6 @@ export enum ProcReturnCode {
 
 export enum Response {
 	Approved = "Approved",
-    Decline = "Decline",
-    Error = "Error",
+	Decline = "Decline",
+	Error = "Error",
 }

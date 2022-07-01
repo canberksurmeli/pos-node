@@ -1,16 +1,31 @@
 {
-	"name": "paynode",
-	"version": "0.0.1",
+	"name": "pos-node",
+	"version": "0.2.0",
 	"description": "A NodeJS Library for Bank Integrations",
-	"main": "index.js",
 	"scripts": {
 		"build": "tsc",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"build:full": "npm run build:cjs",
+		"build:cjs": "tsc -p config/tsconfig.cjs.json",
+		"build:esm": "tsc -p config/tsconfig.esm.json",
+		"build:types": "node tools/cleanup types && tsc -p config/tsconfig.types.json",
+		"clean": "node tools/cleanup",
+		"package": "npm run build && npm pack",
+		"test": "jest --no-cache --runInBand",
+		"test:cov": "jest --coverage --no-cache --runInBand",
+		"addscope": "node tools/packagejson name @tomchen/example-typescript-package"
 	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"files": [
+		"dist"
+	],
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/canboslukberk/paynode.git"
 	},
+	"main": "dist/index.js",
+	"types": "dist/index.d.js",
 	"keywords": [
 		"banking",
 		"integration",

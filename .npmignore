@@ -1,0 +1,10 @@
+.vscode/
+.husky/
+.node_modules/
+src/
+tests/
+.gitignore
+.prettierrc
+jest.config.js
+package-lock.json
+tsconfig.json
