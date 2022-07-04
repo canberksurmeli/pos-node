@@ -1,4 +1,4 @@
-import { Provider, StoreType } from "./enum";
+import { ISO4217CurrencyCode, Provider, ProviderUrl, StoreType, TransactionType } from "./enum";
 
 export type ProcessEnv = {
 	CLIENTID: string;
@@ -24,4 +24,27 @@ export type Config = {
 	storeKey: string;
 	/**  @default "tr" */
 	lang?: "tr" | "en";
+};
+
+export type HTMLFormData = {
+	form: {
+		clientId: string;
+		storetype: StoreType;
+		islemtipi: TransactionType;
+		hash: string;
+		amount: number;
+		currency: ISO4217CurrencyCode;
+		oid: string;
+		okUrl: string;
+		callbackurl: string;
+		failUrl: string;
+		lang: "en" | "tr";
+		rnd: number;
+		pan: string;
+		Ecom_Payment_Card_ExpDate_Year: string;
+		Ecom_Payment_Card_ExpDate_Month: string;
+		cv2: string;
+		optionalParams?: Record<string, string>;
+	};
+	url: ProviderUrl;
 };

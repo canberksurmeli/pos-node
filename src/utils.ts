@@ -1,4 +1,49 @@
 import https from "https";
+import { HTMLFormData } from "./models/common";
+
+/**
+ *
+ * @param optionalParams optional parameters will be returned on response callbacks
+ */
+export function createHtmlContent({ form, url }: HTMLFormData): string {
+	return `
+	<!DOCTYPE html>
+    <html>
+    <head>
+		<meta charset="utf-8">
+    </head>
+    <body>
+        <form id="nestPay3d" method="post" action="${url}">
+            <input type="hidden" name="clientid" value="${form.clientId}" />
+            <input type="hidden" name="storetype" value="${form.storetype}" />
+            <input type="hidden" name="hash" value="${form.hash}" />
+            <input type="hidden" name="islemtipi" value="${form.islemtipi}" />
+            <input type="hidden" name="amount" value="${form.amount}" />
+            <input type="hidden" name="currency" value="${form.currency}" />
+            <input type="hidden" name="oid" value="${form.oid}" />
+            <input type="hidden" name="okUrl" value="${form.okUrl}" />
+            <input type="hidden" name="callbackurl" value="${form.callbackurl}" />
+            <input type="hidden" name="failUrl" value="${form.failUrl}" />
+            <input type="hidden" name="lang" value="${form.lang}" />
+            <input type="hidden" name="pan" value="${form.pan}" />
+            <input type="hidden" name="Ecom_Payment_Card_ExpDate_Year" value="${form.Ecom_Payment_Card_ExpDate_Year}" />
+            <input type="hidden" name="Ecom_Payment_Card_ExpDate_Month" value="${form.Ecom_Payment_Card_ExpDate_Month}" />
+            <input type="hidden" name="rnd" value="${form.rnd}" />
+			${
+				form.optionalParams
+					? Object.entries(form.optionalParams).map(([key, value]) => `<input type="hidden" name="${key}" value="${value}">`)
+					: ""
+			}
+			</form>
+        <script type="text/javascript">
+            document.getElementById("nestPay3d").submit();
+        </script>
+    </body>
+    </html> `;
+}
+
+export const html = `
+   `;
 
 //create generic request sender
 export const sendRequest = (url: string, method: string, data: any) => {

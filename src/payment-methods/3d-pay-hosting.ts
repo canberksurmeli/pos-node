@@ -1,15 +1,7 @@
 import { createHash, randomUUID } from "crypto";
-import ejs from "ejs";
-import { readFileSync } from "fs";
-import path from "path";
-import { Config } from "../models/common";
-import {
-	ISO4217CurrencyCode,
-	Provider,
-	ProviderUrl,
-	StoreType,
-	TransactionType,
-} from "../models/enum";
+import { Config, HTMLFormData } from "../models/common";
+import { ISO4217CurrencyCode, Provider, ProviderUrl, StoreType, TransactionType } from "../models/enum";
+import { createHtmlContent } from "../utils";
 
 export class PayNode {
 	private storeType: StoreType;
@@ -18,7 +10,6 @@ export class PayNode {
 	private username: string;
 	private password: string;
 	private storeKey: string;
-	private lang?: "tr" | "en";
 	constructor(config: Config) {
 		this.storeType = config.storeType;
 		this.provider = config.provider;
@@ -26,7 +17,6 @@ export class PayNode {
 		this.username = config.username;
 		this.password = config.password;
 		this.storeKey = config.storeKey;
-		this.lang = config.lang || "tr";
 	}
 
 	/**
@@ -40,6 +30,8 @@ export class PayNode {
 			expireYear?: string;
 			cvv?: string;
 		};
+		/** @default "tr" */
+		lang?: "en" | "tr";
 		amount: number;
 		/** e.g. https://example.com/success */
 		okUrl: string;
@@ -47,7 +39,7 @@ export class PayNode {
 		failUrl: string;
 		/** e.g. https://example.com/callback */
 		callbackUrl: string;
-		// customParams?: Record<string, unknown>;
+		customParams?: Record<string, string>;
 	}): Promise<string> {
 		switch (this.storeType) {
 			case StoreType._3DPayHosting:
@@ -67,10 +59,11 @@ export class PayNode {
 			cvv?: string;
 		};
 		amount: number;
+		lang?: "en" | "tr";
 		okUrl: string;
 		failUrl: string;
 		callbackUrl: string;
-		// customParams?: Record<string, unknown>;
+		customParams?: Record<string, string>;
 	}) {
 		const orderId = randomUUID();
 		const rnd = new Date().getTime();
@@ -79,42 +72,35 @@ export class PayNode {
 				clientId: this.clientId,
 				storetype: StoreType._3DPayHosting,
 				islemtipi: TransactionType.Auth,
-				hash: "",
+				hash: createHash("sha1")
+					.update(
+						this.clientId +
+							orderId +
+							params.amount +
+							params.okUrl +
+							params.failUrl +
+							TransactionType.Auth +
+							rnd +
+							params.callbackUrl +
+							this.storeKey
+					)
+					.digest("base64"),
 				amount: params.amount,
 				currency: ISO4217CurrencyCode.TRY,
 				oid: orderId,
 				okUrl: params.okUrl,
 				callbackurl: params.callbackUrl,
 				failUrl: params.failUrl,
-				lang: this.lang,
+				lang: params.lang || "tr",
 				rnd,
 				pan: params.creditCard?.number,
 				Ecom_Payment_Card_ExpDate_Year: params.creditCard?.expireYear,
 				Ecom_Payment_Card_ExpDate_Month: params.creditCard?.expireMonth,
 				cv2: params.creditCard?.cvv,
-				//...params.customParams,
+				...params.customParams,
 			},
 			url: ProviderUrl[this.provider],
-		};
-		data.form.hash = createHash("sha1")
-			.update(
-				data.form.clientId +
-					data.form.oid +
-					data.form.amount +
-					data.form.okUrl +
-					data.form.failUrl +
-					data.form.islemtipi +
-					data.form.rnd +
-					data.form.callbackurl +
-					this.storeKey
-			)
-			.digest("base64");
-		return ejs.render(
-			readFileSync(
-				path.resolve(__dirname, "..", "assets", "3d_pay_hosting.html"),
-				"utf8"
-			),
-			data
-		);
+		} as HTMLFormData;
+		return createHtmlContent(data);
 	}
 }
