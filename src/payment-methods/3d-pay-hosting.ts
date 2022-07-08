@@ -97,7 +97,7 @@ export class PayNode {
 				Ecom_Payment_Card_ExpDate_Year: params.creditCard?.expireYear,
 				Ecom_Payment_Card_ExpDate_Month: params.creditCard?.expireMonth,
 				cv2: params.creditCard?.cvv,
-				...params.customParams,
+				optionalParams: params.customParams,
 			},
 			url: ProviderUrl[this.provider],
 		} as HTMLFormData;
