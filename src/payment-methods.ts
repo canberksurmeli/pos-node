@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "crypto";
-import { Config, HTMLFormData } from "../models/common";
-import { ISO4217CurrencyCode, Provider, ProviderUrl, StoreType, TransactionType } from "../models/enum";
-import { createHtmlContent } from "../utils";
+import { Config, HTMLFormData } from "./models/common";
+import { ISO4217CurrencyCode, Provider, ProviderUrl, StoreType, TransactionType } from "./models/enum";
+import { createHtmlContent } from "./utils";
 
 export class PayNode {
 	private storeType: StoreType;
@@ -39,12 +39,15 @@ export class PayNode {
 		failUrl: string;
 		/** e.g. https://example.com/callback */
 		callbackUrl: string;
+		/** counter value that provides redirection in seconds (time to redirect to okUl or fail Url) */
+		refreshTime?: number;
 		customParams?: Record<string, string>;
 	}): Promise<string> {
 		switch (this.storeType) {
 			case StoreType._3DPayHosting:
 				return this.purchase3DPayHosting(params);
 			case StoreType.PayHosting:
+				return this.purchasePayHosting(params);
 			default:
 				break;
 		}
@@ -60,6 +63,7 @@ export class PayNode {
 		};
 		amount: number;
 		lang?: "en" | "tr";
+		refreshTime?: number;
 		okUrl: string;
 		failUrl: string;
 		callbackUrl: string;
@@ -71,7 +75,7 @@ export class PayNode {
 			form: {
 				clientId: this.clientId,
 				storetype: StoreType._3DPayHosting,
-				islemtipi: TransactionType.Auth,
+				islemTipi: TransactionType.Auth,
 				hash: createHash("sha1")
 					.update(
 						this.clientId +
@@ -94,9 +98,65 @@ export class PayNode {
 				lang: params.lang || "tr",
 				rnd,
 				pan: params.creditCard?.number,
-				Ecom_Payment_Card_ExpDate_Year: params.creditCard?.expireYear,
-				Ecom_Payment_Card_ExpDate_Month: params.creditCard?.expireMonth,
+				cardExpDateYear: params.creditCard?.expireYear,
+				cardExpDateMonth: params.creditCard?.expireMonth,
 				cv2: params.creditCard?.cvv,
+				refreshTime: params.refreshTime ?? 10,
+				optionalParams: params.customParams,
+			},
+			url: ProviderUrl[this.provider],
+		} as HTMLFormData;
+		return createHtmlContent(data);
+	}
+
+	private async purchasePayHosting(params: {
+		creditCard?: {
+			number?: string;
+			expireMonth?: string;
+			expireYear?: string;
+			cvv?: string;
+		};
+		amount: number;
+		refreshTime?: number;
+		lang?: "en" | "tr";
+		okUrl: string;
+		callbackUrl: string;
+		failUrl: string;
+		customParams?: Record<string, string>;
+	}) {
+		const orderId = randomUUID();
+		const rnd = new Date().getTime();
+		const data = {
+			form: {
+				clientId: this.clientId,
+				storetype: StoreType.PayHosting,
+				islemTipi: TransactionType.Auth,
+				hash: createHash("sha1")
+					.update(
+						this.clientId +
+							orderId +
+							params.amount +
+							params.okUrl +
+							params.failUrl +
+							TransactionType.Auth +
+							rnd +
+							params.callbackUrl +
+							this.storeKey
+					)
+					.digest("base64"),
+				amount: params.amount,
+				currency: ISO4217CurrencyCode.TRY,
+				oid: orderId,
+				okUrl: params.okUrl,
+				callbackurl: params.callbackUrl,
+				failUrl: params.failUrl,
+				lang: params.lang || "tr",
+				rnd,
+				pan: params.creditCard?.number,
+				cardExpDateYear: params.creditCard?.expireYear,
+				cardExpDateMonth: params.creditCard?.expireMonth,
+				cv2: params.creditCard?.cvv,
+				refreshTime: params.refreshTime ?? 10,
 				optionalParams: params.customParams,
 			},
 			url: ProviderUrl[this.provider],

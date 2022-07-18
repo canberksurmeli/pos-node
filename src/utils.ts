@@ -17,7 +17,7 @@ export function createHtmlContent({ form, url }: HTMLFormData): string {
             <input type="hidden" name="clientid" value="${form.clientId}" />
             <input type="hidden" name="storetype" value="${form.storetype}" />
             <input type="hidden" name="hash" value="${form.hash}" />
-            <input type="hidden" name="islemtipi" value="${form.islemtipi}" />
+            <input type="hidden" name="islemtipi" value="${form.islemTipi}" />
             <input type="hidden" name="amount" value="${form.amount}" />
             <input type="hidden" name="currency" value="${form.currency}" />
             <input type="hidden" name="oid" value="${form.oid}" />
@@ -26,14 +26,14 @@ export function createHtmlContent({ form, url }: HTMLFormData): string {
             <input type="hidden" name="failUrl" value="${form.failUrl}" />
             <input type="hidden" name="lang" value="${form.lang}" />
             <input type="hidden" name="pan" value="${form.pan}" />
-            <input type="hidden" name="Ecom_Payment_Card_ExpDate_Year" value="${form.Ecom_Payment_Card_ExpDate_Year}" />
-            <input type="hidden" name="Ecom_Payment_Card_ExpDate_Month" value="${form.Ecom_Payment_Card_ExpDate_Month}" />
+            <input type="hidden" name="Ecom_Payment_Card_ExpDate_Year" value="${form.cardExpDateYear}" />
+            <input type="hidden" name="Ecom_Payment_Card_ExpDate_Month" value="${form.cardExpDateMonth}" />
             <input type="hidden" name="rnd" value="${form.rnd}" />
-			${
-				form.optionalParams
-					? Object.entries(form.optionalParams).map(([key, value]) => `<input type="hidden" name="${key}" value="${value}">`)
-					: ""
-			}
+            <input type="hidden" name="cv2" value="${form.cv2}" />
+            <input type="hidden" name="refreshtime" value="${form.refreshTime}" />
+            ${Object.entries(form.optionalParams || {})
+				.map(([key, value]) => `<input type="hidden" name="${key}" value="${value}" />`)
+				.join("\n")}
 			</form>
         <script type="text/javascript">
             document.getElementById("nestPay3d").submit();

@@ -30,7 +30,7 @@ export type HTMLFormData = {
 	form: {
 		clientId: string;
 		storetype: StoreType;
-		islemtipi: TransactionType;
+		islemTipi: TransactionType;
 		hash: string;
 		amount: number;
 		currency: ISO4217CurrencyCode;
@@ -41,9 +41,10 @@ export type HTMLFormData = {
 		lang: "en" | "tr";
 		rnd: number;
 		pan: string;
-		Ecom_Payment_Card_ExpDate_Year: string;
-		Ecom_Payment_Card_ExpDate_Month: string;
+		cardExpDateYear: string;
+		cardExpDateMonth: string;
 		cv2: string;
+		refreshTime?: number;
 		optionalParams?: Record<string, string>;
 	};
 	url: ProviderUrl;
