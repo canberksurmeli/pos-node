@@ -14,7 +14,7 @@ export enum Provider {
 }
 export enum ProviderUrl {
 	Asseco = "https://entegrasyon.asseco-see.com.tr/fim/est3Dgate",
-	Ziraat = "https://sanalpos2.ziraatbank.com.tr/fim/api",
+	Ziraat = "https://sanalpos2.ziraatbank.com.tr/fim/est3Dgate",
 }
 
 export enum TransactionType {
