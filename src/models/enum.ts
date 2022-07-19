@@ -29,9 +29,36 @@ export enum ISO4217CurrencyCode {
 	TRY = 949,
 }
 
+/**
+ * Not includes all possible values.
+ */
 export enum ProcReturnCode {
-	Success = "00",
-	Error = "99",
+	Success = 0,
+	CallYourBank = 1,
+	CallYourBankO = 2,
+	InvalidBusiness = 3,
+	HandOverTheCard = 4,
+	DoNotHONOR = 5,
+	ErrorWarningFolderD = 6,
+	HandOverTheCardSpecial = 7,
+	ApproveWithCredentialRequired = 8,
+	PinTryAgain = 9,
+	Successfull = 11,
+	InvalidOperation = 12,
+	InvalidAmount = 13,
+	InvalidCardNumber = 14,
+	NoInterlocutorBank = 15,
+	InvalidOperation2 = 18,
+	TryAgain = 19,
+	DenyHandOverTheCard = 33,
+	CounterfeitCard = 34,
+	LimitedCardHandOver = 36,
+	HandOverTheCard2 = 38,
+	MissingCardHandOver = 41,
+	StolenCardHandOver = 43,
+	UnsufficentFunds = 51,
+	ExpiredCard = 54,
+	UnknownError = 99,
 }
 
 export enum Response {
