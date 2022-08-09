@@ -6,8 +6,8 @@ import { ISO4217CurrencyCode, Mode, Provider, ProviderUrl, StoreType, Transactio
 import { createHtmlContent } from "./utils";
 
 export class PayNode {
-	private storeType: StoreType;
-	private provider: Provider;
+	public storeType: StoreType;
+	public provider: Provider;
 	private clientId: string;
 	private username: string;
 	private password: string;
