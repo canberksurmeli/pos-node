@@ -1,6 +1,7 @@
 export enum StoreType {
 	_3DPayHosting = "3d_pay_hosting",
 	PayHosting = "pay_hosting",
+	Pay = "pay",
 }
 
 export enum Mode {
@@ -10,11 +11,13 @@ export enum Mode {
 
 export enum Provider {
 	Asseco = "Asseco",
-	Ziraat = "Ziraat",
+	Ziraat3D = "Ziraat3D",
+	Asseco3D = "Asseco3D",
 }
 export enum ProviderUrl {
-	Asseco = "https://entegrasyon.asseco-see.com.tr/fim/est3Dgate",
-	Ziraat = "https://sanalpos2.ziraatbank.com.tr/fim/est3Dgate",
+	Asseco3D = "https://entegrasyon.asseco-see.com.tr/fim/est3Dgate",
+	Asseco = "https://entegrasyon.asseco-see.com.tr/fim/api",
+	Ziraat3D = "https://sanalpos2.ziraatbank.com.tr/fim/est3Dgate",
 }
 
 export enum TransactionType {

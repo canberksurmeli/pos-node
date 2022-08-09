@@ -1,6 +1,8 @@
 import { createHash, randomUUID } from "crypto";
+import https from "https";
+import xml2js from "xml2js";
 import { Config, HTMLFormData } from "./models/common";
-import { ISO4217CurrencyCode, Provider, ProviderUrl, StoreType, TransactionType } from "./models/enum";
+import { ISO4217CurrencyCode, Mode, Provider, ProviderUrl, StoreType, TransactionType } from "./models/enum";
 import { createHtmlContent } from "./utils";
 
 export class PayNode {
@@ -24,6 +26,7 @@ export class PayNode {
 	 * @returns html form. Send this form to client as html response.
 	 */
 	async purchase(params: {
+		orderId?: string;
 		creditCard?: {
 			number?: string;
 			expireMonth?: string;
@@ -48,6 +51,8 @@ export class PayNode {
 				return this.purchase3DPayHosting(params);
 			case StoreType.PayHosting:
 				return this.purchasePayHosting(params);
+			case StoreType.Pay:
+				return this.purchasePay(params);
 			default:
 				break;
 		}
@@ -55,6 +60,7 @@ export class PayNode {
 	}
 
 	private async purchase3DPayHosting(params: {
+		orderId?: string;
 		creditCard?: {
 			number?: string;
 			expireMonth?: string;
@@ -69,7 +75,7 @@ export class PayNode {
 		callbackUrl: string;
 		customParams?: Record<string, string>;
 	}) {
-		const orderId = randomUUID();
+		const orderId = params.orderId || randomUUID();
 		const rnd = new Date().getTime();
 		const data = {
 			form: {
@@ -110,6 +116,7 @@ export class PayNode {
 	}
 
 	private async purchasePayHosting(params: {
+		orderId?: string;
 		creditCard?: {
 			number?: string;
 			expireMonth?: string;
@@ -124,7 +131,7 @@ export class PayNode {
 		failUrl: string;
 		customParams?: Record<string, string>;
 	}) {
-		const orderId = randomUUID();
+		const orderId = params.orderId || randomUUID();
 		const rnd = new Date().getTime();
 		const data = {
 			form: {
@@ -163,4 +170,77 @@ export class PayNode {
 		} as HTMLFormData;
 		return createHtmlContent(data);
 	}
+
+	private async purchasePay(params: {
+		orderId?: string;
+		creditCard?: {
+			number?: string;
+			expireMonth?: string;
+			expireYear?: string;
+			cvv?: string;
+		};
+		lang?: "en" | "tr";
+		amount: number;
+		okUrl: string;
+		failUrl: string;
+		callbackUrl: string;
+		refreshTime?: number;
+		customParams?: Record<string, string>;
+	}): Promise<string> {
+		const orderId = params.orderId || randomUUID();
+		const data = {
+			Name: this.username,
+			Password: this.password,
+			ClientId: this.clientId,
+			Mode: Mode.Production,
+			Type: TransactionType.Auth,
+			Currency: ISO4217CurrencyCode.TRY,
+			OrderId: orderId,
+			Total: params.amount,
+			Number: params.creditCard?.number,
+			Expires: `${params.creditCard?.expireMonth}/${params.creditCard?.expireYear}`,
+			Cvv2Val: params.creditCard?.cvv,
+			...params.customParams,
+		};
+		const xml = new xml2js.Builder({ rootName: "CC5Request" }).buildObject(data);
+		const result = await sendRequest({ method: "POST", data: xml, url: ProviderUrl[this.provider] });
+		const res = await new xml2js.Parser({ explicitArray: false }).parseStringPromise(result);
+		return res;
+	}
 }
+
+/**
+ *
+ * @param params.data xml CC5Request
+ * @returns xml result
+ */
+const sendRequest = async (params: { method: "POST"; url: string; data: string }) => {
+	return new Promise<string>((resolve, reject) => {
+		const { hostname, pathname } = new URL(params.url);
+		const options = {
+			hostname,
+			path: pathname,
+			method: params.method,
+			headers: {
+				"Content-Type": "text/xml",
+			},
+		} as https.RequestOptions;
+
+		const request = https.request(options, (res) => {
+			let data = "";
+			res.on("data", (chunk) => {
+				data += chunk;
+			});
+
+			res.on("end", () => {
+				resolve(data);
+			});
+
+			res.on("error", () => {
+				reject();
+			});
+		});
+		request.write(params.data);
+		request.end();
+	});
+};
