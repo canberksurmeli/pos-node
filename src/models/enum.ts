@@ -8,16 +8,21 @@ export enum Mode {
 	Test = "T",
 	Production = "P",
 }
-
+// type Provider = "Asseco" | "Ziraat" | "Iyzico" | "IyzicoTest";
 export enum Provider {
-	Asseco = "Asseco",
-	Ziraat3D = "Ziraat3D",
-	Asseco3D = "Asseco3D",
+	AssecoTest = "TestAsseco",
+	AssecoZiraat = "Ziraat",
+	Iyzico = "Iyzico",
+	IyzicoTest = "IyzicoTest",
 }
+
 export enum ProviderUrl {
+	AssecoTest = "https://entegrasyon.asseco-see.com.tr",
+	AssecoZiraat = "https://sanalpos2.ziraatbank.com.tr",
+	Iyzico = "https://sandbox-api.iyzipay.com",
+	IyzicoTest = "https://sandbox-api.iyzipay.com",
 	Asseco3D = "https://entegrasyon.asseco-see.com.tr/fim/est3Dgate",
-	Asseco = "https://entegrasyon.asseco-see.com.tr/fim/api",
-	Ziraat3D = "https://sanalpos2.ziraatbank.com.tr/fim/est3Dgate",
+	AssecoZiraat3D = "https://sanalpos2.ziraatbank.com.tr/fim/est3Dgate",
 }
 
 export enum TransactionType {

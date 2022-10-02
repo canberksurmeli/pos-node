@@ -108,3 +108,4 @@ out/
 .vscode/
 dist/
 config/.env*
+test.ts

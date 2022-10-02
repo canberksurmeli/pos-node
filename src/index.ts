@@ -1,4 +1,5 @@
+export * from "./iyzico/models";
 export * from "./models/3d-pay-hosting";
-export { Config } from "./models/common";
+export { NestpayOptions as Config } from "./models/common";
 export * from "./models/enum";
-export { PayNode } from "./payment-methods";
+export { PaymentFactory } from "./payment-methods";

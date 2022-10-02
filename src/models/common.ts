@@ -13,11 +13,19 @@ export type ProcessEnv = {
 	CARD_EXPIRES_MONTH: string;
 	CARD_EXPIRES_YEAR: string;
 	CARD_CVV: string;
+	API_KEY: string;
+	SECRET_KEY: string;
 };
 
-export type Config = {
+export type IyzicoOptions = {
+	provider: Provider.Iyzico | Provider.IyzicoTest;
+	apiKey: string;
+	secretKey: string;
+};
+
+export type NestpayOptions = {
+	provider: Provider.AssecoTest | Provider.AssecoZiraat;
 	storeType: StoreType;
-	provider: Provider;
 	clientId: string;
 	username: string;
 	password: string;

@@ -64,3 +64,28 @@ export const sendRequest = (url: string, method: string, data: any) => {
 		req.end();
 	});
 };
+
+export const convertJsonToUrlPathParameters = (data: Record<string, unknown> | Record<string, unknown>[]): string => {
+	const isArray = Array.isArray(data);
+	const items: string[] = [];
+	for (const key in data) {
+		if (isArray) {
+			items.push(`${convertJsonToUrlPathParameters(data[key as unknown as number])}`);
+		} else if (typeof data[key] === "object") {
+			items.push(`${key}=${convertJsonToUrlPathParameters(data[key] as Record<string, unknown>)}`);
+		} else {
+			items.push(`${key}=${(data[key] as number).toString()}`);
+		}
+	}
+	return `[${items.join(isArray ? ", " : ",")}]`;
+};
+
+export const formatPrice = (price: number): string => {
+	if ((typeof price !== "number" && typeof price !== "string") || !isFinite(price)) {
+		return price.toString();
+	}
+	if (Number.isInteger(price)) {
+		return price.toFixed(1);
+	}
+	return price.toString();
+};

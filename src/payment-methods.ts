@@ -1,65 +1,83 @@
 import { createHash, randomUUID } from "crypto";
 import https from "https";
+import { URL } from "url";
 import xml2js from "xml2js";
-import { Config, HTMLFormData } from "./models/common";
+import { generateAuthorizationHeaderParamV1 } from "./iyzico/iyzico";
+import { BasketItemType, PaymentChannel, PaymentGroup } from "./iyzico/models";
+import { HTMLFormData, IyzicoOptions, NestpayOptions } from "./models/common";
 import { ISO4217CurrencyCode, Mode, Provider, ProviderUrl, StoreType, TransactionType } from "./models/enum";
-import { createHtmlContent } from "./utils";
+import { convertJsonToUrlPathParameters, createHtmlContent, formatPrice } from "./utils";
 
-export class PayNode {
+// type paymentProvider = typeof paymentMap[Provider]; //typeof Iyzico | typeof Nestpay
+// type ExtractInstanceType<T> = T extends new () => infer R ? R : never;
+
+// interface IConstruct<T extends new (...args: any) => any> {
+// 	// we can use built-in InstanceType to infer instance type from class type
+// 	type: new (...args: ConstructorParameters<T>) => InstanceType<T>;
+// }
+// type paymentMap = IConstruct<typeof Nestpay | typeof Iyzico>;
+
+type AllPaymentMethods = Iyzico | Nestpay;
+// type MethodToPayment<Provider extends AllPaymentMethods> = Provider extends Iyzico
+// 	? Iyzico
+// 	: Provider extends Nestpay
+// 	? Nestpay
+// 	: Iyzico | Nestpay;
+
+export class PaymentFactory {
+	static createPaymentMethod<T extends Provider>(paramProvider: T): IPayment {
+		switch (paramProvider) {
+			case Provider.Iyzico:
+			case Provider.IyzicoTest:
+				return new Iyzico();
+			case Provider.AssecoTest:
+			case Provider.AssecoZiraat:
+			default:
+				return new Nestpay();
+		}
+	}
+}
+
+interface IPayment {
+	setOptions(options: any): void;
+	/** @returns Transaction result*/
+	purchase(params: any): Promise<string>;
+	/** @return HTML content */
+	purchase3D(params: any): Promise<string>;
+}
+
+export class Nestpay implements IPayment {
 	public storeType: StoreType;
 	public provider: Provider;
 	private clientId: string;
 	private username: string;
 	private password: string;
 	private storeKey: string;
-	constructor(config: Config) {
-		this.storeType = config.storeType;
-		this.provider = config.provider;
-		this.clientId = config.clientId;
-		this.username = config.username;
-		this.password = config.password;
-		this.storeKey = config.storeKey;
+	constructor() {
+		this.storeType = StoreType.Pay;
+		this.provider = Provider.IyzicoTest;
+		this.clientId = "";
+		this.username = "";
+		this.password = "";
+		this.storeKey = "";
+	}
+
+	setOptions(options: NestpayOptions): void {
+		this.storeType = options.storeType;
+		this.provider = options.provider;
+		this.clientId = options.clientId;
+		this.username = options.username;
+		this.password = options.password;
+		this.storeKey = options.storeKey;
 	}
 
 	/**
 	 * @def if you dont pass the creditCard info, it will redirect customer to input page
 	 * @returns html form. Send this form to client as html response.
 	 */
-	async purchase(params: {
-		orderId?: string;
-		creditCard?: {
-			number?: string;
-			expireMonth?: string;
-			expireYear?: string;
-			cvv?: string;
-		};
-		/** @default "tr" */
-		lang?: "en" | "tr";
-		amount: number;
-		/** e.g. https://example.com/success */
-		okUrl: string;
-		/** e.g. https://example.com/failure */
-		failUrl: string;
-		/** e.g. https://example.com/callback */
-		callbackUrl: string;
-		/** counter value that provides redirection in seconds (time to redirect to okUl or fail Url) */
-		refreshTime?: number;
-		customParams?: Record<string, string>;
-	}): Promise<string> {
-		switch (this.storeType) {
-			case StoreType._3DPayHosting:
-				return this.purchase3DPayHosting(params);
-			case StoreType.PayHosting:
-				return this.purchasePayHosting(params);
-			case StoreType.Pay:
-				return this.purchasePay(params);
-			default:
-				break;
-		}
-		return "";
-	}
 
-	private async purchase3DPayHosting(params: {
+	/** 3DPayHosting */
+	async purchase3D(params: {
 		orderId?: string;
 		creditCard?: {
 			number?: string;
@@ -110,11 +128,12 @@ export class PayNode {
 				refreshTime: params.refreshTime ?? 10,
 				optionalParams: params.customParams,
 			},
-			url: ProviderUrl[this.provider],
+			url: this.provider === Provider.AssecoTest ? ProviderUrl.AssecoTest : ProviderUrl.AssecoZiraat3D,
 		} as HTMLFormData;
 		return createHtmlContent(data);
 	}
 
+	/** PayHosting */
 	private async purchasePayHosting(params: {
 		orderId?: string;
 		creditCard?: {
@@ -166,12 +185,13 @@ export class PayNode {
 				refreshTime: params.refreshTime ?? 10,
 				optionalParams: params.customParams,
 			},
-			url: ProviderUrl[this.provider],
+			url: this.provider === Provider.AssecoTest ? ProviderUrl.AssecoTest : ProviderUrl.AssecoZiraat,
 		} as HTMLFormData;
 		return createHtmlContent(data);
 	}
 
-	private async purchasePay(params: {
+	/** Pay */
+	async purchase(params: {
 		orderId?: string;
 		creditCard?: {
 			number?: string;
@@ -181,9 +201,6 @@ export class PayNode {
 		};
 		lang?: "en" | "tr";
 		amount: number;
-		okUrl: string;
-		failUrl: string;
-		callbackUrl: string;
 		refreshTime?: number;
 		customParams?: Record<string, string>;
 	}): Promise<string> {
@@ -203,9 +220,234 @@ export class PayNode {
 			...params.customParams,
 		};
 		const xml = new xml2js.Builder({ rootName: "CC5Request" }).buildObject(data);
-		const result = await sendRequest({ method: "POST", data: xml, url: ProviderUrl[this.provider] });
-		const res = await new xml2js.Parser({ explicitArray: false }).parseStringPromise(result);
-		return res;
+
+		const providerUrl = this.provider === Provider.AssecoTest ? ProviderUrl.AssecoTest : ProviderUrl.AssecoZiraat;
+		const { hostname, pathname } = new URL(`${providerUrl}/fim/api`);
+		const result = await sendPostRequest({
+			body: xml,
+			options: {
+				hostname,
+				path: pathname,
+				method: "POST",
+				headers: {
+					"content-type": "text/xml",
+				},
+			},
+		});
+		return new xml2js.Parser({ explicitArray: false }).parseStringPromise(result);
+	}
+}
+export class Iyzico implements IPayment {
+	private provider: Provider.Iyzico | Provider.IyzicoTest;
+	private apiKey: string;
+	private secretKey: string;
+	constructor() {
+		this.provider = Provider.IyzicoTest;
+		this.apiKey = "";
+		this.secretKey = "";
+	}
+
+	setOptions(options: IyzicoOptions): void {
+		this.provider = options.provider;
+		this.apiKey = options.apiKey;
+		this.secretKey = options.secretKey;
+	}
+
+	/** purchaseWithSubMerchant */
+	async purchase(params: {
+		locale: "tr" | "en";
+		/** orderId */
+		conversationId: string;
+		/** total price without discounts @example 1.7*/
+		price: number;
+		/** price that customer will pay @example 1.2*/
+		paidPrice: number;
+		/** @default 1*/
+		currency: "TRY";
+		installment: number;
+		paymentChannel: PaymentChannel;
+		paymentGroup: PaymentGroup;
+		paymentCard: {
+			cardHolderName: string;
+			cardNumber: string;
+			expireYear: string;
+			expireMonth: string;
+			cvc: string;
+		};
+		buyer: {
+			id: string;
+			name: string;
+			surname: string;
+			identityNumber: string;
+			email: string;
+			gsmNumber?: string;
+			/** @example 2013-04-21 15:12:09 */
+			registrationDate?: string;
+			/** @example 2015-10-05 12:43:35 */
+			lastLoginDate?: string;
+			registrationAddress: string;
+			city: string;
+			country: string;
+			zipCode?: string;
+			ip: string;
+		};
+		shippingAddress: {
+			contactName: string;
+			address: string;
+			city: string;
+			country: string;
+			zipCode?: string;
+		};
+		billingAddress: {
+			contactName: string;
+			address: string;
+			city: string;
+			country: string;
+			zipCode?: string;
+		};
+		basketItems: {
+			id: string;
+			price: number;
+			name: string;
+			category1: string;
+			category2?: string; //optional
+			itemType: BasketItemType;
+			subMerchantKey: string;
+			subMerchantPrice: number;
+		}[];
+	}): Promise<string> {
+		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/payment/auth");
+		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
+		params.price = formatPrice(params.price) as any;
+		params.paidPrice = formatPrice(params.paidPrice) as any;
+		params.basketItems.forEach((item) => {
+			item.price = formatPrice(params.paidPrice) as any;
+			item.subMerchantPrice = formatPrice(params.paidPrice) as any;
+		});
+
+		return sendPostRequest({
+			body: JSON.stringify(params),
+			options: {
+				hostname,
+				path: pathname,
+				method: "POST",
+				headers: {
+					/** random header name */
+					["x-iyzi-rnd"]: randomString,
+					/** client version */
+					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
+					Authorization: generateAuthorizationHeaderParamV1({
+						apiKey: this.apiKey,
+						body: convertJsonToUrlPathParameters(params),
+						randomString,
+						secretKey: this.secretKey,
+					}),
+					"Content-Type": "application/json",
+				},
+			} as https.RequestOptions,
+		});
+	}
+
+	/** purchase3DWithSubMerchant */
+	async purchase3D(params: {
+		locale: "tr" | "en";
+		/** orderId */
+		conversationId: string;
+		/** total price without discounts @example 1.7*/
+		price: number;
+		/** price that customer will pay @example 1.2*/
+		paidPrice: number;
+		/** @default 1*/
+		currency: "TRY";
+		installment: number;
+		paymentChannel: PaymentChannel;
+		paymentGroup: PaymentGroup;
+		/** @example https://test.io/callback */
+		callbackUrl: string;
+		paymentCard: {
+			cardHolderName: string;
+			cardNumber: string;
+			expireYear: string;
+			expireMonth: string;
+			cvc: string;
+		};
+		buyer: {
+			id: string;
+			name: string;
+			surname: string;
+			identityNumber: string;
+			email: string;
+			gsmNumber?: string;
+			/** @example 2013-04-21 15:12:09 */
+			registrationDate?: string;
+			/** @example 2015-10-05 12:43:35 */
+			lastLoginDate?: string;
+			registrationAddress: string;
+			city: string;
+			country: string;
+			zipCode?: string;
+			ip: string;
+		};
+		shippingAddress: {
+			contactName: string;
+			address: string;
+			city: string;
+			country: string;
+			zipCode?: string;
+		};
+		billingAddress: {
+			contactName: string;
+			address: string;
+			city: string;
+			country: string;
+			zipCode?: string;
+		};
+		basketItems: {
+			id: string;
+			price: number;
+			name: string;
+			category1: string;
+			category2?: string; //optional
+			itemType: BasketItemType;
+			subMerchantKey: string;
+			subMerchantPrice: number;
+		}[];
+	}): Promise<string> {
+		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/payment/3dsecure/initialize");
+		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
+		if (!params.installment) {
+			params.installment = 1;
+		}
+
+		params.price = formatPrice(params.price) as any;
+		params.paidPrice = formatPrice(params.paidPrice) as any;
+		params.basketItems.forEach((item) => {
+			item.price = formatPrice(params.paidPrice) as any;
+			item.subMerchantPrice = formatPrice(params.paidPrice) as any;
+		});
+
+		const response = await sendPostRequest({
+			body: JSON.stringify(params),
+			options: {
+				hostname,
+				path: pathname,
+				method: "POST",
+				headers: {
+					/** random header name */
+					["x-iyzi-rnd"]: randomString,
+					/** client version */
+					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
+					Authorization: generateAuthorizationHeaderParamV1({
+						apiKey: this.apiKey,
+						body: convertJsonToUrlPathParameters(params),
+						randomString,
+						secretKey: this.secretKey,
+					}),
+					"content-type": "application/json",
+				},
+			} as https.RequestOptions,
+		});
+		return Buffer.from(JSON.parse(response).threeDSHtmlContent, "base64").toString();
 	}
 }
 
@@ -214,19 +456,9 @@ export class PayNode {
  * @param params.data xml CC5Request
  * @returns xml result
  */
-const sendRequest = async (params: { method: "POST"; url: string; data: string }) => {
+const sendPostRequest = async (params: { body: string; options: https.RequestOptions }) => {
 	return new Promise<string>((resolve, reject) => {
-		const { hostname, pathname } = new URL(params.url);
-		const options = {
-			hostname,
-			path: pathname,
-			method: params.method,
-			headers: {
-				"Content-Type": "text/xml",
-			},
-		} as https.RequestOptions;
-
-		const request = https.request(options, (res) => {
+		const request = https.request(params.options, (res) => {
 			let data = "";
 			res.on("data", (chunk) => {
 				data += chunk;
@@ -240,7 +472,7 @@ const sendRequest = async (params: { method: "POST"; url: string; data: string }
 				reject();
 			});
 		});
-		request.write(params.data);
+		request.write(params.body);
 		request.end();
 	});
 };
