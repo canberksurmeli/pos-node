@@ -8,7 +8,7 @@ export enum Mode {
 	Test = "T",
 	Production = "P",
 }
-// type Provider = "Asseco" | "Ziraat" | "Iyzico" | "IyzicoTest";
+
 export enum Provider {
 	AssecoTest = "TestAsseco",
 	AssecoZiraat = "Ziraat",
