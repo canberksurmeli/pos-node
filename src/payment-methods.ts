@@ -39,6 +39,7 @@ export class PaymentFactory {
 }
 
 interface IPayment {
+	provider: Provider;
 	setOptions(options: any): void;
 	/** @returns Transaction result*/
 	purchase(params: any): Promise<string>;
@@ -238,7 +239,7 @@ export class Nestpay implements IPayment {
 	}
 }
 export class Iyzico implements IPayment {
-	private provider: Provider.Iyzico | Provider.IyzicoTest;
+	public provider: Provider.Iyzico | Provider.IyzicoTest;
 	private apiKey: string;
 	private secretKey: string;
 	constructor() {
