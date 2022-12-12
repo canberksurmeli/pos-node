@@ -1,6 +1,6 @@
 {
 	"name": "pos-node",
-	"version": "0.6.2",
+	"version": "0.6.3",
 	"description": "A NodeJS Library for Bank Integrations",
 	"scripts": {
 		"build": "tsc",
@@ -29,10 +29,12 @@
 	"keywords": [
 		"banking",
 		"integration",
+		"online payment",
 		"sanalpos",
-		"onlineodeme",
+		"online odeme",
 		"entegrasyon",
 		"nestpay",
+		"asseco",
 		"ziraat"
 	],
 	"author": "Can Berk Sürmeli",

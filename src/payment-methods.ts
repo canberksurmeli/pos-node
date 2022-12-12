@@ -4,50 +4,32 @@ import { URL } from "url";
 import xml2js from "xml2js";
 import { generateAuthorizationHeaderParamV1 } from "./iyzico/iyzico";
 import { BasketItemType, PaymentChannel, PaymentGroup } from "./iyzico/models";
-import { HTMLFormData, IyzicoOptions, NestpayOptions } from "./models/common";
+import { AssecoOptions, HTMLFormData, IyzicoOptions } from "./models/common";
 import { ISO4217CurrencyCode, Mode, Provider, ProviderUrl, StoreType, TransactionType } from "./models/enum";
 import { convertJsonToUrlPathParameters, createHtmlContent, formatPrice } from "./utils";
 
-// type paymentProvider = typeof paymentMap[Provider]; //typeof Iyzico | typeof Nestpay
-// type ExtractInstanceType<T> = T extends new () => infer R ? R : never;
-
-// interface IConstruct<T extends new (...args: any) => any> {
-// 	// we can use built-in InstanceType to infer instance type from class type
-// 	type: new (...args: ConstructorParameters<T>) => InstanceType<T>;
-// }
-// type paymentMap = IConstruct<typeof Nestpay | typeof Iyzico>;
-
-type AllPaymentMethods = Iyzico | Nestpay;
-// type MethodToPayment<Provider extends AllPaymentMethods> = Provider extends Iyzico
-// 	? Iyzico
-// 	: Provider extends Nestpay
-// 	? Nestpay
-// 	: Iyzico | Nestpay;
-
 export class PaymentFactory {
-	static createPaymentMethod<T extends Provider>(paramProvider: T): IPayment {
-		switch (paramProvider) {
+	static createPaymentMethod<P extends Provider>(
+		provider: P
+	): {
+		[Provider.Iyzico]: Iyzico;
+		[Provider.IyzicoTest]: Iyzico;
+		[Provider.AssecoTest]: Asseco;
+		[Provider.Ziraat]: Asseco;
+	}[P] {
+		switch (provider) {
 			case Provider.Iyzico:
 			case Provider.IyzicoTest:
-				return new Iyzico();
+				return new Iyzico() as any;
 			case Provider.AssecoTest:
-			case Provider.AssecoZiraat:
+			case Provider.Ziraat:
+				return new Asseco() as any;
 			default:
-				return new Nestpay();
+				throw new Error("Unsupported payment type");
 		}
 	}
 }
-
-interface IPayment {
-	provider: Provider;
-	setOptions(options: any): void;
-	/** @returns Transaction result*/
-	purchase(params: any): Promise<string>;
-	/** @return HTML content */
-	purchase3D(params: any): Promise<string>;
-}
-
-export class Nestpay implements IPayment {
+export class Asseco {
 	public storeType: StoreType;
 	public provider: Provider;
 	private clientId: string;
@@ -63,7 +45,7 @@ export class Nestpay implements IPayment {
 		this.storeKey = "";
 	}
 
-	setOptions(options: NestpayOptions): void {
+	setOptions(options: AssecoOptions): void {
 		this.storeType = options.storeType;
 		this.provider = options.provider;
 		this.clientId = options.clientId;
@@ -93,7 +75,7 @@ export class Nestpay implements IPayment {
 		failUrl: string;
 		callbackUrl: string;
 		customParams?: Record<string, string>;
-	}) {
+	}): Promise<string> {
 		const orderId = params.orderId || randomUUID();
 		const rnd = new Date().getTime();
 		const data = {
@@ -238,7 +220,7 @@ export class Nestpay implements IPayment {
 		return new xml2js.Parser({ explicitArray: false }).parseStringPromise(result);
 	}
 }
-export class Iyzico implements IPayment {
+export class Iyzico {
 	public provider: Provider.Iyzico | Provider.IyzicoTest;
 	private apiKey: string;
 	private secretKey: string;
@@ -448,6 +430,10 @@ export class Iyzico implements IPayment {
 				},
 			} as https.RequestOptions,
 		});
+		const responseJson = JSON.parse(response);
+		if (responseJson.errorMessage) {
+			throw new Error(responseJson.errorMessage);
+		}
 		return Buffer.from(JSON.parse(response).threeDSHtmlContent, "base64").toString();
 	}
 }

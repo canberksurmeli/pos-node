@@ -11,7 +11,7 @@ export enum Mode {
 
 export enum Provider {
 	AssecoTest = "TestAsseco",
-	AssecoZiraat = "Ziraat",
+	Ziraat = "Ziraat",
 	Iyzico = "Iyzico",
 	IyzicoTest = "IyzicoTest",
 }

@@ -3,7 +3,7 @@ import http from "http";
 import ngrok from "ngrok";
 import { Builder } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome";
-import { BasketItemType, IyzicoType, NestpayType, PaymentChannel, PaymentFactory, PaymentGroup, Provider, StoreType } from "../src/index";
+import { BasketItemType, PaymentChannel, PaymentFactory, PaymentGroup, Provider, StoreType } from "../src/index";
 import { ProcessEnv } from "../src/models/common";
 
 jest.setTimeout(60 * 1000);
@@ -86,8 +86,8 @@ describe("test purchase", () => {
 				.forBrowser("chrome")
 				.setChromeOptions(new Options().detachDriver(true).excludeSwitches("enable-logging"))
 				.build();
-			const nestpay = PaymentFactory.createPaymentMethod(Provider.AssecoTest) as NestpayType;
-			nestpay.setOptions({
+			const asseco = PaymentFactory.createPaymentMethod(Provider.AssecoTest);
+			asseco.setOptions({
 				clientId: env.CLIENTID,
 				password: env.PASSWORD,
 				storeKey: env.STOREKEY,
@@ -97,7 +97,7 @@ describe("test purchase", () => {
 			});
 			const successResponse = new SyncPoint<void>();
 			requestRoot = async (req: Request, res: Response) => {
-				const htmlText = await nestpay.purchase3D({
+				const htmlText = await asseco.purchase3D({
 					amount: 10,
 					creditCard: {
 						number: env.CARD_NUMBER_VISA,
@@ -132,8 +132,8 @@ describe("test purchase", () => {
 	});
 
 	test.skip("Asseco Pay Hosting", async () => {
-		const nestpay = PaymentFactory.createPaymentMethod(Provider.AssecoTest) as NestpayType;
-		nestpay.setOptions({
+		const asseco = PaymentFactory.createPaymentMethod(Provider.AssecoTest);
+		asseco.setOptions({
 			clientId: env.CLIENTID,
 			password: env.PASSWORD,
 			storeKey: env.STOREKEY,
@@ -142,7 +142,7 @@ describe("test purchase", () => {
 			provider: Provider.AssecoTest,
 		});
 		const successResponse = new SyncPoint<void>();
-		const result = await nestpay.purchase({
+		const result = await asseco.purchase({
 			amount: 10,
 			creditCard: {
 				number: env.CARD_NUMBER_MASTERCARD,
@@ -156,8 +156,8 @@ describe("test purchase", () => {
 		await successResponse.promise;
 		console.log("Test completed");
 	});
-	test.skip("Iyzico payment", async () => {
-		const iyzico = PaymentFactory.createPaymentMethod(Provider.IyzicoTest) as IyzicoType;
+	test("Iyzico payment", async () => {
+		const iyzico = PaymentFactory.createPaymentMethod(Provider.IyzicoTest);
 
 		iyzico.setOptions({
 			apiKey: env.API_KEY,
@@ -167,11 +167,11 @@ describe("test purchase", () => {
 
 		const response = await iyzico.purchase({
 			locale: "tr",
-			conversationId: "123456789",
-			price: 5,
-			paidPrice: 5,
+			conversationId: "4e16ec3d-846a-4bb2-ab8c-0ef2975107e7",
+			price: 0.5,
+			paidPrice: 0.5,
 			installment: 1,
-			paymentChannel: PaymentChannel.WEB,
+			paymentChannel: PaymentChannel.MOBILE,
 			paymentGroup: PaymentGroup.PRODUCT,
 			paymentCard: {
 				cardHolderName: "John Doe",
@@ -181,54 +181,54 @@ describe("test purchase", () => {
 				cvc: "123",
 			},
 			buyer: {
-				id: "BY789",
-				name: "John",
-				surname: "Doe",
-				identityNumber: "74300864791",
-				email: "canberk.surmeli@armongate.com",
-				gsmNumber: "+905349559519",
-				registrationDate: "2013-04-21 15:12:09",
-				lastLoginDate: "2015-10-05 12:43:35",
-				registrationAddress: "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
-				city: "Istanbul",
-				country: "Turkey",
+				id: "66ccb7f5-db05-439d-b371-3bf168ad6b94",
+				name: "Sadri",
+				surname: "Alışık",
+				identityNumber: "45454545445",
+				email: "sadri.alisik@startrek.com",
+				gsmNumber: "5301234567",
+				registrationDate: "2022-10-04 07:19:38.403",
+				lastLoginDate: "2022-10-04 07:19:38.403",
+				registrationAddress: "Ankara",
+				city: "Ankara",
+				country: "Tc",
 				ip: "192.168.11.1",
 			},
 			shippingAddress: {
-				address: "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
-				contactName: "Jane Doe",
-				city: "Istanbul",
-				country: "Turkey",
+				address: "Ankara",
+				contactName: "Sadri Alışık",
+				city: "Ankara",
+				country: "Tc",
 			},
 			billingAddress: {
-				address: "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
-				contactName: "Jane Doe",
-				city: "Istanbul",
-				country: "Turkey",
+				address: "Ankara",
+				contactName: "Sadri Alışık",
+				city: "Ankara",
+				country: "Tc",
 			},
 			basketItems: [
 				{
-					id: "BI101",
-					price: 5,
-					name: "Binocular",
-					category1: "Collectibles",
-					itemType: BasketItemType.PHYSICAL,
+					id: "0eab2823-801e-4bf5-abc1-94bfb03cc98a",
+					price: 0.5,
+					name: "Parking Payment",
+					category1: "Parking",
+					itemType: BasketItemType.VIRTUAL,
 					subMerchantKey: "aC26ws15IRkTuTaPFXJ+pnZ3uCs=",
-					subMerchantPrice: 5,
+					subMerchantPrice: 0.5,
 				},
 			],
 			currency: "TRY",
-		});
+		} as any);
 		expect(JSON.parse(response).status).toBe("success");
 	});
-	test("Iyzico 3D Payment", async () => {
+	test.skip("Iyzico 3D Payment", async () => {
 		const url = await ngrok.connect({ addr: parseInt(env.PORT), authtoken: env.NGROK_AUTH_TOKEN });
-		const driver = new Builder()
+		let driver = new Builder()
 			.forBrowser("chrome")
 			.setChromeOptions(new Options().detachDriver(true).excludeSwitches("enable-logging"))
 			.build();
 
-		const iyzico = PaymentFactory.createPaymentMethod(Provider.Iyzico) as IyzicoType;
+		const iyzico = PaymentFactory.createPaymentMethod(Provider.Iyzico);
 		iyzico.setOptions({
 			apiKey: env.API_KEY,
 			provider: Provider.IyzicoTest,
@@ -256,7 +256,7 @@ describe("test purchase", () => {
 					name: "John",
 					surname: "Doe",
 					identityNumber: "74300864791",
-					email: "canberk.surmeli@armongate.com",
+					email: "test.test@armongate.com",
 					gsmNumber: "+905349559519",
 					registrationDate: "2013-04-21 15:12:09",
 					lastLoginDate: "2015-10-05 12:43:35",
@@ -296,6 +296,7 @@ describe("test purchase", () => {
 		};
 		requestCallback = async (req: Request, res: Response): Promise<void> => {
 			res.status(200).send(req.body);
+			console.log(req.body);
 			expect(req.body.status).toBe("success");
 			successResponse.resolve();
 		};

@@ -1,5 +1,3 @@
-import { Iyzico, Nestpay } from "../payment-methods";
-
 export enum PaymentChannel {
 	MOBILE = "MOBILE",
 	WEB = "WEB",
@@ -84,6 +82,3 @@ export type IyzicoPaymentRequest = {
 	}[];
 	currency: string;
 };
-
-export type NestpayType = InstanceType<typeof Nestpay>;
-export type IyzicoType = InstanceType<typeof Iyzico>;

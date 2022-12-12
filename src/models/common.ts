@@ -23,8 +23,8 @@ export type IyzicoOptions = {
 	secretKey: string;
 };
 
-export type NestpayOptions = {
-	provider: Provider.AssecoTest | Provider.AssecoZiraat;
+export type AssecoOptions = {
+	provider: Provider.AssecoTest | Provider.Ziraat;
 	storeType: StoreType;
 	clientId: string;
 	username: string;
