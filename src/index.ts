@@ -1,4 +1,4 @@
-export * from "./iyzico/models";
-export * from "./models/3d-pay-hosting";
+export * from "./models/iyzico";
+export * from "./models/nestpay";
 export * from "./models/enum";
 export { PaymentFactory } from "./payment-methods";

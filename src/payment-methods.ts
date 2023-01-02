@@ -3,9 +3,9 @@ import https from "https";
 import { URL } from "url";
 import xml2js from "xml2js";
 import { generateAuthorizationHeaderParamV1 } from "./iyzico/iyzico";
-import { BasketItemType, PaymentChannel, PaymentGroup } from "./iyzico/models";
 import { AssecoOptions, HTMLFormData, IyzicoOptions } from "./models/common";
 import { ISO4217CurrencyCode, Mode, Provider, ProviderUrl, StoreType, TransactionType } from "./models/enum";
+import { AddCardResponse, BasketItemType, DeleteCardResponse, PaymentChannel, PaymentGroup } from "./models/iyzico.js";
 import { convertJsonToUrlPathParameters, createHtmlContent, formatPrice } from "./utils";
 
 export class PaymentFactory {
@@ -234,6 +234,98 @@ export class Iyzico {
 		this.provider = options.provider;
 		this.apiKey = options.apiKey;
 		this.secretKey = options.secretKey;
+	}
+
+	async saveCard(card: {
+		alias: string;
+		holderName: string;
+		number: string;
+		expire: {
+			month: string;
+			year: string;
+		};
+		email: string;
+		/** The id given by the authority to the card to be stored. */
+		externalId?: string;
+		locale?: string;
+		/** A value that you can send and receive during the request can be used to match the request/response. */
+		conversationId?: string;
+	}): Promise<AddCardResponse | string> {
+		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/cardstorage/card");
+		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
+		const body = {
+			locale: card.locale,
+			conversationId: card.conversationId,
+			externalId: card.externalId,
+			email: card.email,
+			card: {
+				cardAlias: card.alias,
+				cardNumber: card.number,
+				expireYear: card.expire.year,
+				expireMonth: card.expire.month,
+				cardHolderName: card.holderName,
+			},
+		};
+		const result = await sendPostRequest({
+			body: JSON.stringify(body),
+			options: {
+				hostname,
+				path: pathname,
+				method: "POST",
+				headers: {
+					/** random header name */
+					["x-iyzi-rnd"]: randomString,
+					/** client version */
+					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
+					Authorization: generateAuthorizationHeaderParamV1({
+						apiKey: this.apiKey,
+						body: convertJsonToUrlPathParameters(body),
+						randomString,
+						secretKey: this.secretKey,
+					}),
+					"content-type": "application/json",
+				},
+			} as https.RequestOptions,
+		});
+		try {
+			return JSON.parse(result) as AddCardResponse;
+		} catch (err) {
+			return result;
+		}
+	}
+
+	async deleteCard(params: {
+		cardToken: string;
+		cardUserKey: string;
+		locale?: string;
+		conversationId?: string;
+	}): Promise<DeleteCardResponse> {
+		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/cardstorage/card");
+		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
+		const body = params;
+		const result = await sendPostRequest({
+			body: JSON.stringify(body),
+			options: {
+				hostname,
+				path: pathname,
+				method: "DELETE",
+				headers: {
+					/** random header name */
+					["x-iyzi-rnd"]: randomString,
+					/** client version */
+					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
+					Authorization: generateAuthorizationHeaderParamV1({
+						apiKey: this.apiKey,
+						body: convertJsonToUrlPathParameters(body),
+						randomString,
+						secretKey: this.secretKey,
+					}),
+					"content-type": "application/json",
+				},
+			} as https.RequestOptions,
+		});
+
+		return JSON.parse(result);
 	}
 
 	/** purchaseWithSubMerchant */

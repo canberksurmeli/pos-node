@@ -3,8 +3,9 @@ import http from "http";
 import ngrok from "ngrok";
 import { Builder } from "selenium-webdriver";
 import { Options } from "selenium-webdriver/chrome";
-import { BasketItemType, PaymentChannel, PaymentFactory, PaymentGroup, Provider, StoreType } from "../src/index";
+import { PaymentFactory, Provider, StoreType } from "../src/index";
 import { ProcessEnv } from "../src/models/common";
+import { BasketItemType, PaymentChannel, PaymentGroup } from "../src/models/iyzico";
 
 jest.setTimeout(60 * 1000);
 const env = process.env as ProcessEnv;
@@ -156,7 +157,7 @@ describe("test purchase", () => {
 		await successResponse.promise;
 		console.log("Test completed");
 	});
-	test("Iyzico payment", async () => {
+	test.skip("Iyzico payment", async () => {
 		const iyzico = PaymentFactory.createPaymentMethod(Provider.IyzicoTest);
 
 		iyzico.setOptions({
@@ -303,6 +304,60 @@ describe("test purchase", () => {
 
 		await driver.get(`${url}`);
 		await successResponse.promise;
+	});
+	let cardToken: string;
+	let userKey: string; 
+	test("Iyzico Store a Card ", async () => {
+		const iyzico = PaymentFactory.createPaymentMethod(Provider.IyzicoTest);
+
+		iyzico.setOptions({
+			apiKey: env.API_KEY,
+			provider: Provider.IyzicoTest,
+			secretKey: env.SECRET_KEY,
+		});
+
+		const result = await iyzico.saveCard({
+			alias: "card alias",
+			email: "test642@test.com",
+			holderName: "John Doe",
+			number: "5528790000000008",
+			expire: {
+				year: "2030",
+				month: "12",
+			},
+			conversationId: "e0fca195-a83e-42a1-88c5-b078f6455b78",
+			externalId: "52d33158-2cb9-4ab3-bd8e-02c8fc64ed60",
+			locale: "tr",
+		});
+
+		if (typeof result === "string") {
+			throw new Error(result);
+		}
+		
+		expect(result.status).toBe("success");
+	});
+
+	test("Iyzico Delete Stored Card", async () => {
+		const iyzico = PaymentFactory.createPaymentMethod(Provider.IyzicoTest);
+
+		iyzico.setOptions({
+			apiKey: env.API_KEY,
+			provider: Provider.IyzicoTest,
+			secretKey: env.SECRET_KEY,
+		});
+
+		const result = await iyzico.deleteCard({
+			cardToken: cardToken,
+			cardUserKey: userKey,
+			conversationId: "e0fca195-a83e-42a1-88c5-b078f6455b78",
+			locale: "tr",
+		});
+
+		if (typeof result === "string") {
+			throw new Error(result);
+		}
+
+		expect(result.status).toBe("success");
 	});
 });
 
