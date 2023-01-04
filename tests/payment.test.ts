@@ -306,7 +306,7 @@ describe("test purchase", () => {
 		await successResponse.promise;
 	});
 	let cardToken: string;
-	let userKey: string; 
+	let userKey: string;
 	test("Iyzico Store a Card ", async () => {
 		const iyzico = PaymentFactory.createPaymentMethod(Provider.IyzicoTest);
 
@@ -333,8 +333,9 @@ describe("test purchase", () => {
 		if (typeof result === "string") {
 			throw new Error(result);
 		}
-		
 		expect(result.status).toBe("success");
+		cardToken = result.cardToken;
+		userKey = result.cardUserKey;
 	});
 
 	test("Iyzico Delete Stored Card", async () => {
@@ -349,13 +350,9 @@ describe("test purchase", () => {
 		const result = await iyzico.deleteCard({
 			cardToken: cardToken,
 			cardUserKey: userKey,
-			conversationId: "e0fca195-a83e-42a1-88c5-b078f6455b78",
+			conversationId: "321321312",
 			locale: "tr",
 		});
-
-		if (typeof result === "string") {
-			throw new Error(result);
-		}
 
 		expect(result.status).toBe("success");
 	});

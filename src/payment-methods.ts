@@ -206,7 +206,7 @@ export class Asseco {
 
 		const providerUrl = this.provider === Provider.AssecoTest ? ProviderUrl.AssecoTest : ProviderUrl.AssecoZiraat;
 		const { hostname, pathname } = new URL(`${providerUrl}/fim/api`);
-		const result = await sendPostRequest({
+		const result = await sendHttpsRequest({
 			body: xml,
 			options: {
 				hostname,
@@ -250,7 +250,7 @@ export class Iyzico {
 		locale?: string;
 		/** A value that you can send and receive during the request can be used to match the request/response. */
 		conversationId?: string;
-	}): Promise<AddCardResponse | string> {
+	}): Promise<AddCardResponse> {
 		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/cardstorage/card");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
 		const body = {
@@ -266,7 +266,7 @@ export class Iyzico {
 				cardHolderName: card.holderName,
 			},
 		};
-		const result = await sendPostRequest({
+		const result = await sendHttpsRequest({
 			body: JSON.stringify(body),
 			options: {
 				hostname,
@@ -287,23 +287,25 @@ export class Iyzico {
 				},
 			} as https.RequestOptions,
 		});
-		try {
-			return JSON.parse(result) as AddCardResponse;
-		} catch (err) {
-			return result;
-		}
+		return JSON.parse(result) as AddCardResponse;
 	}
 
 	async deleteCard(params: {
-		cardToken: string;
-		cardUserKey: string;
 		locale?: string;
 		conversationId?: string;
+		cardToken: string;
+		cardUserKey: string;
 	}): Promise<DeleteCardResponse> {
 		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/cardstorage/card");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
-		const body = params;
-		const result = await sendPostRequest({
+		const body = Object.freeze({
+			locale: params.locale,
+			conversationId: params.conversationId,
+			cardUserKey: params.cardUserKey,
+			cardToken: params.cardToken,
+		});
+		console.log(convertJsonToUrlPathParameters(body));
+		const result = await sendHttpsRequest({
 			body: JSON.stringify(body),
 			options: {
 				hostname,
@@ -320,11 +322,9 @@ export class Iyzico {
 						randomString,
 						secretKey: this.secretKey,
 					}),
-					"content-type": "application/json",
 				},
 			} as https.RequestOptions,
 		});
-
 		return JSON.parse(result);
 	}
 
@@ -400,7 +400,7 @@ export class Iyzico {
 			item.subMerchantPrice = formatPrice(params.paidPrice) as any;
 		});
 
-		return sendPostRequest({
+		return sendHttpsRequest({
 			body: JSON.stringify(params),
 			options: {
 				hostname,
@@ -501,7 +501,7 @@ export class Iyzico {
 			item.subMerchantPrice = formatPrice(params.paidPrice) as any;
 		});
 
-		const response = await sendPostRequest({
+		const response = await sendHttpsRequest({
 			body: JSON.stringify(params),
 			options: {
 				hostname,
@@ -535,7 +535,9 @@ export class Iyzico {
  * @param params.data xml CC5Request
  * @returns xml result
  */
-const sendPostRequest = async (params: { body: string; options: https.RequestOptions }) => {
+const sendHttpsRequest = async (params: { body: string; options: https.RequestOptions }): Promise<string> => {
+	console.log(JSON.stringify(params.options, null, 4));
+	console.log(JSON.stringify(params.body, null, 4));
 	return new Promise<string>((resolve, reject) => {
 		const request = https.request(params.options, (res) => {
 			let data = "";

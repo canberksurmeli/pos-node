@@ -26,6 +26,10 @@ export enum SubMerchantType {
 	LIMITED_OR_JOINT_STOCK_COMPANY = "LIMITED_OR_JOINT_STOCK_COMPANY",
 }
 
+export type Status = "success" | "failure";
+export type CardType = "CREDIT_CARD" | "DEBIT_CARD" | "PREPAID_CARD";
+export type CardAssociation = "VISA" | "MASTER_CARD" | "AMERICAN_EXPRESS";
+export type CardFamily = "Bonus" | "Axess" | "World" | "Maximum" | "Paraf" | "CardFinans";
 export type IyzicoPaymentRequest = {
 	locale: string;
 	conversationId: string;
@@ -84,22 +88,32 @@ export type IyzicoPaymentRequest = {
 };
 
 export type AddCardResponse = {
-	conversationId: string;
+	/** first 6 digit of the card */
+	binNumber: string;
+	cardAlias: string;
+	cardAssociation: CardAssociation;
+	cardBankCode?: number;
+	cardBankName?: string;
+	cardFamily?: string;
+	cardToken: string;
+	cardType?: CardType;
+	cardUserKey: string;
+	conversationId?: string;
 	email: string;
-	errorCode: string;
-	errorMessage: string;
+	errorCode?: string;
+	errorMessage?: string;
 	externalId: string;
 	locale: string;
-	status: string;
+	status: Status;
 	systemTime: number;
 };
 
 export type DeleteCardResponse = {
-	status: string;
+	conversationId?: string;
 	errorCode: string;
 	errorMessage: string;
-    errorGroup: string;
+	errorGroup: string;
 	locale: string;
+	status: Status;
 	systemTime: number;
-	conversationId: string;
 };
