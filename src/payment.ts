@@ -2,11 +2,18 @@ import { createHash, randomUUID } from "crypto";
 import https from "https";
 import { URL } from "url";
 import xml2js from "xml2js";
-import { generateAuthorizationHeaderParamV1 } from "./iyzico/iyzico";
 import { AssecoOptions, HTMLFormData, IyzicoOptions } from "./models/common";
 import { ISO4217CurrencyCode, Mode, Provider, ProviderUrl, StoreType, TransactionType } from "./models/enum";
-import { AddCardResponse, BasketItemType, DeleteCardResponse, PaymentChannel, PaymentGroup } from "./models/iyzico.js";
-import { convertJsonToUrlPathParameters, createHtmlContent, formatPrice } from "./utils";
+import {
+	AddCardResponse,
+	BasketItemType,
+	DeleteCardResponse,
+	GetSavedCardResponse,
+	PaymentChannel,
+	PaymentGroup,
+} from "./models/iyzico.js";
+import { convertJsonToUrlPathParameters, createHtmlContent, formatPrice, removeEmptyProperties } from "./utils";
+import { generateIyzicoAuthorizationHeaderParamV1 } from "./utils.js";
 
 export class PaymentFactory {
 	static createPaymentMethod<P extends Provider>(
@@ -236,13 +243,51 @@ export class Iyzico {
 		this.secretKey = options.secretKey;
 	}
 
-	async saveCard(card: {
-		alias: string;
-		holderName: string;
-		number: string;
-		expire: {
-			month: string;
-			year: string;
+	async getSavedCard(params: {
+		locale?: string;
+		/** A value that you can send and receive during the request can be used to match the request/response. */
+		conversationId?: string;
+		cardUserKey: string;
+	}): Promise<GetSavedCardResponse> {
+		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/cardstorage/cards");
+		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
+		const body = {
+			locale: params.locale,
+			conversationId: params.conversationId,
+			cardUserKey: params.cardUserKey,
+		};
+		const clearedBody = removeEmptyProperties(body);
+		const result = await sendHttpsRequest({
+			body: JSON.stringify(clearedBody),
+			options: {
+				hostname,
+				path: pathname,
+				method: "POST",
+				headers: {
+					/** random header name */
+					["x-iyzi-rnd"]: randomString,
+					/** client version */
+					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
+					Authorization: generateIyzicoAuthorizationHeaderParamV1({
+						apiKey: this.apiKey,
+						body: convertJsonToUrlPathParameters(clearedBody),
+						randomString,
+						secretKey: this.secretKey,
+					}),
+					"content-type": "application/json",
+				},
+			} as https.RequestOptions,
+		});
+		return JSON.parse(result) as GetSavedCardResponse;
+	}
+
+	async saveCard(params: {
+		card: {
+			alias: string;
+			holderName: string;
+			number: string;
+			expireMonth: string;
+			expireYear: string;
 		};
 		email: string;
 		/** The id given by the authority to the card to be stored. */
@@ -254,20 +299,21 @@ export class Iyzico {
 		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/cardstorage/card");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
 		const body = {
-			locale: card.locale,
-			conversationId: card.conversationId,
-			externalId: card.externalId,
-			email: card.email,
+			locale: params.locale,
+			conversationId: params.conversationId,
+			externalId: params.externalId,
+			email: params.email,
 			card: {
-				cardAlias: card.alias,
-				cardNumber: card.number,
-				expireYear: card.expire.year,
-				expireMonth: card.expire.month,
-				cardHolderName: card.holderName,
+				cardAlias: params.card.alias,
+				cardNumber: params.card.number,
+				expireYear: params.card.expireYear,
+				expireMonth: params.card.expireMonth,
+				cardHolderName: params.card.holderName,
 			},
 		};
+		const clearedBody = removeEmptyProperties(body);
 		const result = await sendHttpsRequest({
-			body: JSON.stringify(body),
+			body: JSON.stringify(clearedBody),
 			options: {
 				hostname,
 				path: pathname,
@@ -277,9 +323,9 @@ export class Iyzico {
 					["x-iyzi-rnd"]: randomString,
 					/** client version */
 					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
-					Authorization: generateAuthorizationHeaderParamV1({
+					Authorization: generateIyzicoAuthorizationHeaderParamV1({
 						apiKey: this.apiKey,
-						body: convertJsonToUrlPathParameters(body),
+						body: convertJsonToUrlPathParameters(clearedBody),
 						randomString,
 						secretKey: this.secretKey,
 					}),
@@ -291,22 +337,24 @@ export class Iyzico {
 	}
 
 	async deleteCard(params: {
-		locale?: string;
-		conversationId?: string;
 		cardToken: string;
 		cardUserKey: string;
+		conversationId?: string;
+		locale?: string;
 	}): Promise<DeleteCardResponse> {
 		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/cardstorage/card");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
-		const body = Object.freeze({
+
+		const body = {
 			locale: params.locale,
 			conversationId: params.conversationId,
 			cardUserKey: params.cardUserKey,
 			cardToken: params.cardToken,
-		});
-		console.log(convertJsonToUrlPathParameters(body));
+		};
+		const clearedBody = removeEmptyProperties(body);
+		const stringBody = JSON.stringify(clearedBody);
 		const result = await sendHttpsRequest({
-			body: JSON.stringify(body),
+			body: stringBody,
 			options: {
 				hostname,
 				path: pathname,
@@ -316,12 +364,14 @@ export class Iyzico {
 					["x-iyzi-rnd"]: randomString,
 					/** client version */
 					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
-					Authorization: generateAuthorizationHeaderParamV1({
+					Authorization: generateIyzicoAuthorizationHeaderParamV1({
 						apiKey: this.apiKey,
-						body: convertJsonToUrlPathParameters(body),
+						body: convertJsonToUrlPathParameters(clearedBody),
 						randomString,
 						secretKey: this.secretKey,
 					}),
+					"Content-Length": stringBody.length,
+					"Content-Type": "application/json",
 				},
 			} as https.RequestOptions,
 		});
@@ -411,7 +461,7 @@ export class Iyzico {
 					["x-iyzi-rnd"]: randomString,
 					/** client version */
 					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
-					Authorization: generateAuthorizationHeaderParamV1({
+					Authorization: generateIyzicoAuthorizationHeaderParamV1({
 						apiKey: this.apiKey,
 						body: convertJsonToUrlPathParameters(params),
 						randomString,
@@ -512,7 +562,7 @@ export class Iyzico {
 					["x-iyzi-rnd"]: randomString,
 					/** client version */
 					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
-					Authorization: generateAuthorizationHeaderParamV1({
+					Authorization: generateIyzicoAuthorizationHeaderParamV1({
 						apiKey: this.apiKey,
 						body: convertJsonToUrlPathParameters(params),
 						randomString,
@@ -533,11 +583,8 @@ export class Iyzico {
 /**
  *
  * @param params.data xml CC5Request
- * @returns xml result
  */
 const sendHttpsRequest = async (params: { body: string; options: https.RequestOptions }): Promise<string> => {
-	console.log(JSON.stringify(params.options, null, 4));
-	console.log(JSON.stringify(params.body, null, 4));
 	return new Promise<string>((resolve, reject) => {
 		const request = https.request(params.options, (res) => {
 			let data = "";

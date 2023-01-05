@@ -87,6 +87,27 @@ export type IyzicoPaymentRequest = {
 	currency: string;
 };
 
+export type GetSavedCardResponse = {
+	/** first 6 digit of the card */
+	binNumber: string;
+	cardAlias: string;
+	cardAssociation: CardAssociation;
+	cardBankCode?: number;
+	cardBankName?: string;
+	cardFamily?: string;
+	cardToken: string;
+	cardType?: CardType;
+	carduserKey: string;
+	conversationId?: string;
+	email: string;
+	errorCode?: string;
+	errorMessage?: string;
+	externalId: string;
+	locale: string;
+	status: Status;
+	systemTime: number;
+};
+
 export type AddCardResponse = {
 	/** first 6 digit of the card */
 	binNumber: string;

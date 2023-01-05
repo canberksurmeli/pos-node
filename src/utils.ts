@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import https from "https";
 import { HTMLFormData } from "./models/common";
 
@@ -88,4 +89,39 @@ export const formatPrice = (price: number): string => {
 		return price.toFixed(1);
 	}
 	return price.toString();
+};
+
+export const removeEmptyProperties = (obj: {}) => {
+	return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null));
+};
+
+export const generateIyzicoAuthorizationHeaderParamV2 = (params: {
+	apiKey: string;
+	secretKey: string;
+	randomString: string;
+	uri: string;
+	body: string;
+}) => {
+	const { apiKey, secretKey, randomString, uri, body } = params;
+	const signature = crypto
+		.createHmac("sha256", secretKey)
+		.update(randomString + uri + body)
+		.digest("hex");
+	const authorizationParams = ["apiKey:" + apiKey, "randomKey:" + randomString, "signature:" + signature];
+	const hash = Buffer.from(authorizationParams.join("&")).toString("base64");
+	return `IYZWSv2 ${hash}`;
+};
+
+export const generateIyzicoAuthorizationHeaderParamV1 = (params: {
+	apiKey: string;
+	secretKey: string;
+	randomString: string;
+	body: string;
+}) => {
+	const { apiKey, secretKey, randomString, body } = params;
+	const hash = crypto
+		.createHash("sha1")
+		.update(apiKey + randomString + secretKey + body, "utf-8")
+		.digest("base64");
+	return `IYZWS ${apiKey}:${hash}`;
 };

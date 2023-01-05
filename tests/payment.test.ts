@@ -317,25 +317,36 @@ describe("test purchase", () => {
 		});
 
 		const result = await iyzico.saveCard({
-			alias: "card alias",
-			email: "test642@test.com",
-			holderName: "John Doe",
-			number: "5528790000000008",
-			expire: {
-				year: "2030",
-				month: "12",
+			card: {
+				alias: "card alias",
+				holderName: "John Doe",
+				number: "5528790000000008",
+				expireYear: "2030",
+				expireMonth: "12",
 			},
-			conversationId: "e0fca195-a83e-42a1-88c5-b078f6455b78",
-			externalId: "52d33158-2cb9-4ab3-bd8e-02c8fc64ed60",
-			locale: "tr",
+			email: "test642@test.com",
 		});
 
-		if (typeof result === "string") {
-			throw new Error(result);
-		}
 		expect(result.status).toBe("success");
 		cardToken = result.cardToken;
 		userKey = result.cardUserKey;
+	});
+
+	test("Get Stored Card", async () => {
+		const iyzico = PaymentFactory.createPaymentMethod(Provider.IyzicoTest);
+
+		iyzico.setOptions({
+			apiKey: env.API_KEY,
+			provider: Provider.IyzicoTest,
+			secretKey: env.SECRET_KEY,
+		});
+
+		const result = await iyzico.getSavedCard({
+			cardUserKey: userKey,
+			conversationId: "321321312",
+		});
+
+		expect(result.status).toBe("success");
 	});
 
 	test("Iyzico Delete Stored Card", async () => {
@@ -350,10 +361,7 @@ describe("test purchase", () => {
 		const result = await iyzico.deleteCard({
 			cardToken: cardToken,
 			cardUserKey: userKey,
-			conversationId: "321321312",
-			locale: "tr",
 		});
-
 		expect(result.status).toBe("success");
 	});
 });
