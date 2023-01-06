@@ -1,6 +1,6 @@
 {
 	"name": "pos-node",
-	"version": "0.7.5",
+	"version": "0.7.6",
 	"description": "A NodeJS Library for Bank Integrations",
 	"scripts": {
 		"build": "tsc",
