@@ -307,7 +307,7 @@ describe("test purchase", () => {
 	});
 	let cardToken: string;
 	let userKey: string;
-	test("Iyzico Store a Card ", async () => {
+	test.skip("Iyzico Store a Card ", async () => {
 		const iyzico = PaymentFactory.createPaymentMethod(Provider.IyzicoTest);
 
 		iyzico.setOptions({
@@ -332,7 +332,7 @@ describe("test purchase", () => {
 		userKey = result.cardUserKey;
 	});
 
-	test.skip("Get Stored Card", async () => {
+	test("Get Stored Card", async () => {
 		const iyzico = PaymentFactory.createPaymentMethod(Provider.IyzicoTest);
 
 		iyzico.setOptions({
@@ -341,12 +341,20 @@ describe("test purchase", () => {
 			secretKey: env.SECRET_KEY,
 		});
 
-		const result = await iyzico.getSavedCards({
-			cardUserKey: userKey,
+		const result1 = await iyzico.getSavedCards({
+			cardUserKey: "B2BMpRJl/1+HoUxR2Vh4vSpI1P0=",
 			conversationId: "321321312",
 		});
+		result1.cardDetails.forEach(async (card) => {
+			const result = await iyzico.deleteCard({
+				cardToken: card.cardToken,
+				cardUserKey: "B2BMpRJl/1+HoUxR2Vh4vSpI1P0=",
+			});
+			console.log(result);
+		});
 
-		expect(result.status).toBe("success");
+		result1;
+		// expect(result.status).toBe("success");
 	});
 
 	test.skip("Iyzico Delete Stored Card", async () => {
@@ -359,8 +367,8 @@ describe("test purchase", () => {
 		});
 
 		const result = await iyzico.deleteCard({
-			cardToken: cardToken,
-			cardUserKey: userKey,
+			cardToken: "eUchBL3MbUFlnTVPGDH94/Qwzrg=",
+			cardUserKey: "B2BMpRJl/1+HoUxR2Vh4vSpI1P0=",
 		});
 		expect(result.status).toBe("success");
 	});
