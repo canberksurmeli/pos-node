@@ -87,6 +87,15 @@ export type IyzicoPaymentRequest = {
 	currency: string;
 };
 
+export type IyzicoPaymentResponse = {
+	status: Status;
+	errorCode?: string;
+	errorMessage?: string;
+	errorGroup?: string;
+	locale: string;
+	systemTime: number;
+};
+
 export type GetSavedCardsResponse = {
 	cardDetails: {
 		/** first 8 digit of the card */

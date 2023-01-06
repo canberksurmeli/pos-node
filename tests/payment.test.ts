@@ -220,7 +220,7 @@ describe("test purchase", () => {
 			],
 			currency: "TRY",
 		} as any);
-		expect(JSON.parse(response).status).toBe("success");
+		expect(response.status).toBe("success");
 	});
 	test.skip("Iyzico 3D Payment", async () => {
 		const url = await ngrok.connect({ addr: parseInt(env.PORT), authtoken: env.NGROK_AUTH_TOKEN });

@@ -4,7 +4,15 @@ import { URL } from "url";
 import xml2js from "xml2js";
 import { AssecoOptions, HTMLFormData, IyzicoOptions } from "./models/common";
 import { ISO4217CurrencyCode, Mode, Provider, ProviderUrl, StoreType, TransactionType } from "./models/enum";
-import { AddCardResponse, BasketItemType, DeleteCardResponse, GetSavedCardsResponse, PaymentChannel, PaymentGroup } from "./models/iyzico";
+import {
+	AddCardResponse,
+	BasketItemType,
+	DeleteCardResponse,
+	GetSavedCardsResponse,
+	IyzicoPaymentResponse,
+	PaymentChannel,
+	PaymentGroup,
+} from "./models/iyzico";
 import {
 	convertJsonToUrlPathParameters,
 	createHtmlContent,
@@ -441,10 +449,10 @@ export class Iyzico {
 			category1: string;
 			category2?: string; //optional
 			itemType: BasketItemType;
-			subMerchantKey: string;
-			subMerchantPrice: number;
+			subMerchantKey?: string;
+			subMerchantPrice?: number;
 		}[];
-	}): Promise<string> {
+	}): Promise<IyzicoPaymentResponse> {
 		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/payment/auth");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
 		params.price = formatPrice(params.price) as any;
@@ -454,7 +462,7 @@ export class Iyzico {
 			item.subMerchantPrice = formatPrice(params.paidPrice) as any;
 		});
 
-		return sendHttpsRequest({
+		const result = await sendHttpsRequest({
 			body: JSON.stringify(params),
 			options: {
 				hostname,
@@ -475,6 +483,7 @@ export class Iyzico {
 				},
 			} as https.RequestOptions,
 		});
+		return JSON.parse(result);
 	}
 
 	async purchaseWithSavedCard(params: {
