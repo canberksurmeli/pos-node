@@ -287,7 +287,10 @@ export class Iyzico {
 			expireMonth: string;
 			expireYear: string;
 		};
-		email: string;
+		/** if user already have a key */
+		userKey?: string;
+		/** no need if cardUserKey provided */
+		email?: string;
 		/** The id given by the authority to the card to be stored. */
 		externalId?: string;
 		locale?: string;
@@ -301,6 +304,7 @@ export class Iyzico {
 			conversationId: params.conversationId,
 			externalId: params.externalId,
 			email: params.email,
+			cardUserKey: params.userKey,
 			card: {
 				cardAlias: params.card.alias,
 				cardNumber: params.card.number,
