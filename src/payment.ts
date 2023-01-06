@@ -4,16 +4,14 @@ import { URL } from "url";
 import xml2js from "xml2js";
 import { AssecoOptions, HTMLFormData, IyzicoOptions } from "./models/common";
 import { ISO4217CurrencyCode, Mode, Provider, ProviderUrl, StoreType, TransactionType } from "./models/enum";
+import { AddCardResponse, BasketItemType, DeleteCardResponse, GetSavedCardResponse, PaymentChannel, PaymentGroup } from "./models/iyzico";
 import {
-	AddCardResponse,
-	BasketItemType,
-	DeleteCardResponse,
-	GetSavedCardResponse,
-	PaymentChannel,
-	PaymentGroup,
-} from "./models/iyzico.js";
-import { convertJsonToUrlPathParameters, createHtmlContent, formatPrice, removeEmptyProperties } from "./utils";
-import { generateIyzicoAuthorizationHeaderParamV1 } from "./utils.js";
+	convertJsonToUrlPathParameters,
+	createHtmlContent,
+	formatPrice,
+	generateIyzicoAuthorizationHeaderParamV1,
+	removeEmptyProperties,
+} from "./utils";
 
 export class PaymentFactory {
 	static createPaymentMethod<P extends Provider>(
@@ -392,6 +390,8 @@ export class Iyzico {
 		installment: number;
 		paymentChannel: PaymentChannel;
 		paymentGroup: PaymentGroup;
+		/** 0-Do not Register 1-register @default 0*/
+		registerCard?: number;
 		paymentCard: {
 			cardHolderName: string;
 			cardNumber: string;

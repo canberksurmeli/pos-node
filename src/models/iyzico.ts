@@ -88,15 +88,18 @@ export type IyzicoPaymentRequest = {
 };
 
 export type GetSavedCardResponse = {
-	/** first 6 digit of the card */
-	binNumber: string;
-	cardAlias: string;
-	cardAssociation: CardAssociation;
-	cardBankCode?: number;
-	cardBankName?: string;
-	cardFamily?: string;
-	cardToken: string;
-	cardType?: CardType;
+	cardDetails: {
+		/** first 8 digit of the card */
+		binNumber: string;
+		cardAlias: string;
+		cardAssociation: CardAssociation;
+		cardBankCode?: number;
+		cardBankName?: string;
+		cardFamily?: string;
+		cardToken: string;
+		cardType?: CardType;
+		lastFourDigits: number;
+	}[];
 	carduserKey: string;
 	conversationId?: string;
 	email: string;
