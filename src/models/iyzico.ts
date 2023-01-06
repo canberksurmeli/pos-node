@@ -87,7 +87,7 @@ export type IyzicoPaymentRequest = {
 	currency: string;
 };
 
-export type GetSavedCardResponse = {
+export type GetSavedCardsResponse = {
 	cardDetails: {
 		/** first 8 digit of the card */
 		binNumber: string;

@@ -4,7 +4,7 @@ import { URL } from "url";
 import xml2js from "xml2js";
 import { AssecoOptions, HTMLFormData, IyzicoOptions } from "./models/common";
 import { ISO4217CurrencyCode, Mode, Provider, ProviderUrl, StoreType, TransactionType } from "./models/enum";
-import { AddCardResponse, BasketItemType, DeleteCardResponse, GetSavedCardResponse, PaymentChannel, PaymentGroup } from "./models/iyzico";
+import { AddCardResponse, BasketItemType, DeleteCardResponse, GetSavedCardsResponse, PaymentChannel, PaymentGroup } from "./models/iyzico";
 import {
 	convertJsonToUrlPathParameters,
 	createHtmlContent,
@@ -241,12 +241,12 @@ export class Iyzico {
 		this.secretKey = options.secretKey;
 	}
 
-	async getSavedCard(params: {
+	async getSavedCards(params: {
 		locale?: string;
 		/** A value that you can send and receive during the request can be used to match the request/response. */
 		conversationId?: string;
 		cardUserKey: string;
-	}): Promise<GetSavedCardResponse> {
+	}): Promise<GetSavedCardsResponse> {
 		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/cardstorage/cards");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
 		const body = {
@@ -276,7 +276,7 @@ export class Iyzico {
 				},
 			} as https.RequestOptions,
 		});
-		return JSON.parse(result) as GetSavedCardResponse;
+		return JSON.parse(result) as GetSavedCardsResponse;
 	}
 
 	async saveCard(params: {
