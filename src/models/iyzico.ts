@@ -88,6 +88,27 @@ export type IyzicoPaymentRequest = {
 };
 
 export type IyzicoPaymentResponse = {
+	authCode: string;
+	binNumber: string;
+	cardAssociation?: CardAssociation;
+	cardToken?: string;
+	cardType?: CardType;
+	cardUserKey?: string;
+	conversationId?: string
+	currency: string;
+	fraudStatus: number;
+	hostReference: string;
+	installment: number;
+	itemTransactions: {}[];
+	iyziCommissionFee: number;
+	iyziCommissionRateAmount: number;
+	lastFourDigits: string;
+	merchantCommissionRate: number;
+	merchantCommissionRateAmount: number;
+	paidPrice: number;
+	paymentId: string;
+	phase: string;
+	price: number;
 	status: Status;
 	errorCode?: string;
 	errorMessage?: string;

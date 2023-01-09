@@ -342,15 +342,8 @@ describe("test purchase", () => {
 		});
 
 		const result1 = await iyzico.getSavedCards({
-			cardUserKey: "B2BMpRJl/1+HoUxR2Vh4vSpI1P0=",
+			cardUserKey: userKey,
 			conversationId: "321321312",
-		});
-		result1.cardDetails.forEach(async (card) => {
-			const result = await iyzico.deleteCard({
-				cardToken: card.cardToken,
-				cardUserKey: "B2BMpRJl/1+HoUxR2Vh4vSpI1P0=",
-			});
-			console.log(result);
 		});
 
 		result1;
@@ -367,8 +360,8 @@ describe("test purchase", () => {
 		});
 
 		const result = await iyzico.deleteCard({
-			cardToken: "eUchBL3MbUFlnTVPGDH94/Qwzrg=",
-			cardUserKey: "B2BMpRJl/1+HoUxR2Vh4vSpI1P0=",
+			cardToken: cardToken,
+			cardUserKey: userKey,
 		});
 		expect(result.status).toBe("success");
 	});

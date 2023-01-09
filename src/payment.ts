@@ -453,37 +453,7 @@ export class Iyzico {
 			subMerchantPrice?: number;
 		}[];
 	}): Promise<IyzicoPaymentResponse> {
-		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/payment/auth");
-		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
-		params.price = formatPrice(params.price) as any;
-		params.paidPrice = formatPrice(params.paidPrice) as any;
-		params.basketItems.forEach((item) => {
-			item.price = formatPrice(params.paidPrice) as any;
-			item.subMerchantPrice = formatPrice(params.paidPrice) as any;
-		});
-
-		const result = await sendHttpsRequest({
-			body: JSON.stringify(params),
-			options: {
-				hostname,
-				path: pathname,
-				method: "POST",
-				headers: {
-					/** random header name */
-					["x-iyzi-rnd"]: randomString,
-					/** client version */
-					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
-					Authorization: generateIyzicoAuthorizationHeaderParamV1({
-						apiKey: this.apiKey,
-						body: convertJsonToUrlPathParameters(params),
-						randomString,
-						secretKey: this.secretKey,
-					}),
-					"Content-Type": "application/json",
-				},
-			} as https.RequestOptions,
-		});
-		return JSON.parse(result);
+		return this.purchaseBase(params);
 	}
 
 	async purchaseWithSavedCard(params: {
@@ -500,13 +470,9 @@ export class Iyzico {
 		paymentChannel: PaymentChannel;
 		paymentGroup: PaymentGroup;
 		/** 0-Do not Register 1-register @default 0*/
-		registerCard?: number;
 		paymentCard: {
-			cardHolderName: string;
-			cardNumber: string;
-			expireYear: string;
-			expireMonth: string;
-			cvc: string;
+			cardUserKey: string;
+			cardToken: string;
 		};
 		buyer: {
 			id: string;
@@ -549,7 +515,91 @@ export class Iyzico {
 			subMerchantKey: string;
 			subMerchantPrice: number;
 		}[];
-	}): Promise<string> {
+	}): Promise<IyzicoPaymentResponse> {
+		return this.purchaseBase(params);
+	}
+
+	private async purchaseBase(params: {
+		locale: "tr" | "en";
+		/** orderId */
+		conversationId: string;
+		/** total price without discounts @example 1.7*/
+		price: number;
+		/** price that customer will pay @example 1.2*/
+		paidPrice: number;
+		/** @default 1*/
+		currency: "TRY";
+		installment: number;
+		paymentChannel: PaymentChannel;
+		paymentGroup: PaymentGroup;
+		/**
+		 * @description
+		 *
+		 * For registed card
+		 * @param cardUserKey  required
+		 * @param cardToken 	required
+		 *
+		 * For normal payment
+		 * @param cardHolderName required
+		 * @param cardNumber 	 required
+		 * @param expireYear 	 required
+		 * @param expireMonth 	 required
+		 * @param cvc 		 	 required
+		 *
+		 */
+		paymentCard: {
+			cardUserKey?: string;
+			cardToken?: string;
+			cardHolderName?: string;
+			cardNumber?: string;
+			expireYear?: string;
+			expireMonth?: string;
+			cvc?: string;
+			/** 0-Do not Register 1-register @default 0 */
+			registerCard?: number;
+		};
+		buyer: {
+			id: string;
+			name: string;
+			surname: string;
+			identityNumber: string;
+			email: string;
+			gsmNumber?: string;
+			/** @example 2013-04-21 15:12:09 */
+			registrationDate?: string;
+			/** @example 2015-10-05 12:43:35 */
+			lastLoginDate?: string;
+			registrationAddress: string;
+			city: string;
+			country: string;
+			zipCode?: string;
+			ip: string;
+		};
+		shippingAddress: {
+			contactName: string;
+			address: string;
+			city: string;
+			country: string;
+			zipCode?: string;
+		};
+		billingAddress: {
+			contactName: string;
+			address: string;
+			city: string;
+			country: string;
+			zipCode?: string;
+		};
+		basketItems: {
+			id: string;
+			price: number;
+			name: string;
+			category1: string;
+			category2?: string; //optional
+			itemType: BasketItemType;
+			subMerchantKey?: string;
+			subMerchantPrice?: number;
+		}[];
+	}): Promise<IyzicoPaymentResponse> {
 		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/payment/auth");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
 		params.price = formatPrice(params.price) as any;
@@ -559,7 +609,7 @@ export class Iyzico {
 			item.subMerchantPrice = formatPrice(params.paidPrice) as any;
 		});
 
-		return sendHttpsRequest({
+		const result = await sendHttpsRequest({
 			body: JSON.stringify(params),
 			options: {
 				hostname,
@@ -580,6 +630,7 @@ export class Iyzico {
 				},
 			} as https.RequestOptions,
 		});
+		return JSON.parse(result);
 	}
 
 	/** purchase3DWithSubMerchant */
