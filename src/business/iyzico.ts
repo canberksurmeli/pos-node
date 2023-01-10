@@ -522,7 +522,7 @@ export class Iyzico {
 		});
 		const responseJson = JSON.parse(response);
 		if (responseJson.errorMessage) {
-			throw new Error(responseJson.errorMessage);
+			throw new Error(response);
 		}
 		return Buffer.from(JSON.parse(response).threeDSHtmlContent, "base64").toString();
 	}
