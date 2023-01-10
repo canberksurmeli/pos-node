@@ -1,6 +1,6 @@
 import { Provider } from "../models/enum.js";
-import { Asseco } from "../payment.js";
 import { Iyzico } from "./iyzico.js";
+import { Nestpay } from "./nestpay.js";
 
 export class PaymentFactory {
 	static createPaymentMethod<P extends Provider>(
@@ -8,16 +8,16 @@ export class PaymentFactory {
 	): {
 		[Provider.Iyzico]: Iyzico;
 		[Provider.IyzicoTest]: Iyzico;
-		[Provider.AssecoTest]: Asseco;
-		[Provider.Ziraat]: Asseco;
+		[Provider.NestpayTest]: Nestpay;
+		[Provider.Ziraat]: Nestpay;
 	}[P] {
 		switch (provider) {
 			case Provider.Iyzico:
 			case Provider.IyzicoTest:
 				return new Iyzico() as any;
-			case Provider.AssecoTest:
+			case Provider.NestpayTest:
 			case Provider.Ziraat:
-				return new Asseco() as any;
+				return new Nestpay() as any;
 			default:
 				throw new Error("Unsupported payment type");
 		}

@@ -80,25 +80,25 @@ beforeAll(() => {
 });
 
 describe("test purchase", () => {
-	test.skip("Asseco 3D Pay Hosting", async () => {
+	test.skip("Nestpay 3D Pay Hosting", async () => {
 		try {
 			const url = await ngrok.connect({ addr: parseInt(env.PORT), authtoken: env.NGROK_AUTH_TOKEN });
 			const driver = new Builder()
 				.forBrowser("chrome")
 				.setChromeOptions(new Options().detachDriver(true).excludeSwitches("enable-logging"))
 				.build();
-			const asseco = PaymentFactory.createPaymentMethod(Provider.AssecoTest);
-			asseco.setOptions({
+			const nestpay = PaymentFactory.createPaymentMethod(Provider.NestpayTest);
+			nestpay.setOptions({
 				clientId: env.CLIENTID,
 				password: env.PASSWORD,
 				storeKey: env.STOREKEY,
 				storeType: StoreType._3DPayHosting,
 				username: env.USERNAME,
-				provider: Provider.AssecoTest,
+				provider: Provider.NestpayTest,
 			});
 			const successResponse = new SyncPoint<void>();
 			requestRoot = async (req: Request, res: Response) => {
-				const htmlText = await asseco.purchase3D({
+				const htmlText = await nestpay.purchase3D({
 					amount: 10,
 					creditCard: {
 						number: env.CARD_NUMBER_VISA,
@@ -132,18 +132,18 @@ describe("test purchase", () => {
 		}
 	});
 
-	test.skip("Asseco Pay Hosting", async () => {
-		const asseco = PaymentFactory.createPaymentMethod(Provider.AssecoTest);
-		asseco.setOptions({
+	test.skip("Nestpay Pay Hosting", async () => {
+		const nestpay = PaymentFactory.createPaymentMethod(Provider.NestpayTest);
+		nestpay.setOptions({
 			clientId: env.CLIENTID,
 			password: env.PASSWORD,
 			storeKey: env.STOREKEY,
 			storeType: StoreType.Pay,
 			username: env.USERNAME,
-			provider: Provider.AssecoTest,
+			provider: Provider.NestpayTest,
 		});
 		const successResponse = new SyncPoint<void>();
-		const result = await asseco.purchase({
+		const result = await nestpay.purchase({
 			amount: 10,
 			creditCard: {
 				number: env.CARD_NUMBER_MASTERCARD,

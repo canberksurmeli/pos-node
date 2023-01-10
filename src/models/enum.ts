@@ -10,19 +10,19 @@ export enum Mode {
 }
 
 export enum Provider {
-	AssecoTest = "TestAsseco",
+	NestpayTest = "NestpayTest",
 	Ziraat = "Ziraat",
 	Iyzico = "Iyzico",
 	IyzicoTest = "IyzicoTest",
 }
 
 export enum ProviderUrl {
-	AssecoTest = "https://entegrasyon.asseco-see.com.tr",
-	AssecoZiraat = "https://sanalpos2.ziraatbank.com.tr",
+	NestpayTest = "https://entegrasyon.asseco-see.com.tr",
+	Ziraat = "https://sanalpos2.ziraatbank.com.tr",
 	Iyzico = "https://sandbox-api.iyzipay.com",
 	IyzicoTest = "https://sandbox-api.iyzipay.com",
-	Asseco3D = "https://entegrasyon.asseco-see.com.tr/fim/est3Dgate",
-	AssecoZiraat3D = "https://sanalpos2.ziraatbank.com.tr/fim/est3Dgate",
+	Nestpay3D = "https://entegrasyon.asseco-see.com.tr/fim/est3Dgate",
+	Ziraat3D = "https://sanalpos2.ziraatbank.com.tr/fim/est3Dgate",
 }
 
 export enum TransactionType {

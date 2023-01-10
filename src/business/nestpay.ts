@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "crypto";
 import xml2js from "xml2js";
-import { AssecoOptions, HTMLFormData } from "../models/common.js";
+import { HTMLFormData, NestpayOptions } from "../models/common.js";
 import { ISO4217CurrencyCode, Mode, Provider, ProviderUrl, StoreType, TransactionType } from "../models/enum.js";
 import { createHtmlContent, sendHttpsRequest } from "../utils.js";
 export class Nestpay {
@@ -19,7 +19,7 @@ export class Nestpay {
 		this.storeKey = "";
 	}
 
-	setOptions(options: AssecoOptions): void {
+	setOptions(options: NestpayOptions): void {
 		this.storeType = options.storeType;
 		this.provider = options.provider;
 		this.clientId = options.clientId;
@@ -85,7 +85,7 @@ export class Nestpay {
 				refreshTime: params.refreshTime ?? 10,
 				optionalParams: params.customParams,
 			},
-			url: this.provider === Provider.AssecoTest ? ProviderUrl.AssecoTest : ProviderUrl.AssecoZiraat3D,
+			url: this.provider === Provider.NestpayTest ? ProviderUrl.NestpayTest : ProviderUrl.Ziraat3D,
 		} as HTMLFormData;
 		return createHtmlContent(data);
 	}
@@ -142,7 +142,7 @@ export class Nestpay {
 				refreshTime: params.refreshTime ?? 10,
 				optionalParams: params.customParams,
 			},
-			url: this.provider === Provider.AssecoTest ? ProviderUrl.AssecoTest : ProviderUrl.AssecoZiraat,
+			url: this.provider === Provider.NestpayTest ? ProviderUrl.NestpayTest : ProviderUrl.Ziraat,
 		} as HTMLFormData;
 		return createHtmlContent(data);
 	}
@@ -178,7 +178,7 @@ export class Nestpay {
 		};
 		const xml = new xml2js.Builder({ rootName: "CC5Request" }).buildObject(data);
 
-		const providerUrl = this.provider === Provider.AssecoTest ? ProviderUrl.AssecoTest : ProviderUrl.AssecoZiraat;
+		const providerUrl = this.provider === Provider.NestpayTest ? ProviderUrl.NestpayTest : ProviderUrl.Ziraat;
 		const { hostname, pathname } = new URL(`${providerUrl}/fim/api`);
 		const result = await sendHttpsRequest({
 			body: xml,
