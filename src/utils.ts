@@ -43,29 +43,6 @@ export function createHtmlContent({ form, url }: HTMLFormData): string {
     </html> `;
 }
 
-export const html = `
-   `;
-
-//create generic request sender
-export const sendRequest = (url: string, method: string, data: any) => {
-	return new Promise((resolve, reject) => {
-		const req = https.request(url, { method }, (res) => {
-			let data = "";
-			res.on("data", (chunk) => {
-				data += chunk;
-			});
-			res.on("end", () => {
-				resolve(data);
-			});
-		});
-		req.on("error", (err) => {
-			reject(err);
-		});
-		req.write(JSON.stringify(data));
-		req.end();
-	});
-};
-
 export const convertJsonToUrlPathParameters = (data: Record<string, unknown> | Record<string, unknown>[]): string => {
 	const isArray = Array.isArray(data);
 	const items: string[] = [];
@@ -124,4 +101,29 @@ export const generateIyzicoAuthorizationHeaderParamV1 = (params: {
 		.update(apiKey + randomString + secretKey + body, "utf-8")
 		.digest("base64");
 	return `IYZWS ${apiKey}:${hash}`;
+};
+
+/**
+ *
+ * @param params.data xml CC5Request
+ */
+export const sendHttpsRequest = async (params: { body: string; options: https.RequestOptions }): Promise<string> => {
+	return new Promise<string>((resolve, reject) => {
+		const request = https.request(params.options, (res) => {
+			let data = "";
+			res.on("data", (chunk) => {
+				data += chunk;
+			});
+
+			res.on("end", () => {
+				resolve(data);
+			});
+
+			res.on("error", () => {
+				reject();
+			});
+		});
+		request.write(params.body);
+		request.end();
+	});
 };
