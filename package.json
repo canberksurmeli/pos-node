@@ -1,6 +1,6 @@
 {
 	"name": "pos-node",
-	"version": "0.8.6",
+	"version": "0.8.8",
 	"description": "A NodeJS Library for Bank Integrations",
 	"scripts": {
 		"build": "tsc",
@@ -53,6 +53,7 @@
 		"@types/xml2js": "^0.4.11",
 		"express": "^4.18.1",
 		"jest": "^28.1.1",
+		"jest-ts-webcompat-resolver": "^1.0.0",
 		"ngrok": "^4.3.1",
 		"selenium-webdriver": "^4.3.1",
 		"ts-jest": "^28.0.5",

@@ -307,7 +307,7 @@ describe("test purchase", () => {
 	});
 	let cardToken: string;
 	let userKey: string;
-	test.skip("Iyzico Store a Card ", async () => {
+	test("Iyzico Store a Card ", async () => {
 		const iyzico = PaymentFactory.createPaymentMethod(Provider.IyzicoTest);
 
 		iyzico.setOptions({
@@ -324,7 +324,7 @@ describe("test purchase", () => {
 				expireYear: "2030",
 				expireMonth: "12",
 			},
-			userKey: "FBUOXYauAaPiK5p4NwkHcNjL3Do=",
+			email: "JohnDoe@email.com"
 		});
 
 		expect(result.status).toBe("success");
@@ -341,13 +341,95 @@ describe("test purchase", () => {
 			secretKey: env.SECRET_KEY,
 		});
 
-		const result1 = await iyzico.getSavedCards({
+		const result = await iyzico.getSavedCards({
 			cardUserKey: userKey,
 			conversationId: "321321312",
 		});
 
-		result1;
-		// expect(result.status).toBe("success");
+		expect(result.status).toBe("success");
+	});
+
+	test("3DS Payment With Stored Card", async () => {
+		const url = await ngrok.connect({ addr: parseInt(env.PORT), authtoken: env.NGROK_AUTH_TOKEN });
+		let driver = new Builder()
+			.forBrowser("chrome")
+			.setChromeOptions(new Options().detachDriver(true).excludeSwitches("enable-logging"))
+			.build();
+
+		const iyzico = PaymentFactory.createPaymentMethod(Provider.IyzicoTest);
+
+		iyzico.setOptions({
+			apiKey: env.API_KEY,
+			provider: Provider.IyzicoTest,
+			secretKey: env.SECRET_KEY,
+		});
+
+		const successResponse = new SyncPoint<void>();
+		requestRoot = async (req: Request, res: Response) => {
+			const htmlText = await iyzico.purchase3DWithSavedCard({
+				locale: "tr",
+				conversationId: "123456789",
+				price: 5,
+				paidPrice: 5,
+				installment: 1,
+				paymentChannel: PaymentChannel.WEB,
+				paymentGroup: PaymentGroup.PRODUCT,
+				paymentCard: {
+					cardToken: cardToken,
+					cardUserKey: userKey,
+				},
+				buyer: {
+					id: "BY789",
+					name: "John",
+					surname: "Doe",
+					identityNumber: "74300864791",
+					email: "test.test@emailexample.com",
+					gsmNumber: "+905349559519",
+					registrationDate: "2013-04-21 15:12:09",
+					lastLoginDate: "2015-10-05 12:43:35",
+					registrationAddress: "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
+					city: "Istanbul",
+					country: "Turkey",
+					ip: "192.168.11.1",
+				},
+				shippingAddress: {
+					address: "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
+					contactName: "Jane Doe",
+					city: "Istanbul",
+					country: "Turkey",
+				},
+				billingAddress: {
+					address: "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
+					contactName: "Jane Doe",
+					city: "Istanbul",
+					country: "Turkey",
+				},
+				basketItems: [
+					{
+						id: "BI101",
+						price: 5,
+						name: "Binocular",
+						category1: "Collectibles",
+						itemType: BasketItemType.PHYSICAL,
+						subMerchantKey: "xLQq9ZAuNVSLe0WwCTVAy9V2G84=",
+						subMerchantPrice: 5,
+					},
+				],
+				currency: "TRY",
+				callbackUrl: `${url}/callback`,
+			});
+			expect(htmlText).toBeTruthy();
+			res.send(htmlText);
+		};
+		requestCallback = async (req: Request, res: Response): Promise<void> => {
+			res.status(200).send(req.body);
+			console.log(req.body);
+			expect(req.body.status).toBe("success");
+			successResponse.resolve();
+		};
+
+		await driver.get(`${url}`);
+		await successResponse.promise;
 	});
 
 	test.skip("Iyzico Delete Stored Card", async () => {

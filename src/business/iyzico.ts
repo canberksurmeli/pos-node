@@ -82,7 +82,7 @@ export class Iyzico {
 		};
 		/** if user already have a key */
 		userKey?: string;
-		/** no need if cardUserKey provided */
+		/** @required if cardUserKey is not provided */
 		email?: string;
 		/** The id given by the authority to the card to be stored. */
 		externalId?: string;

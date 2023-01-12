@@ -6,5 +6,6 @@ const config: Config.InitialOptions = {
 		"^.+\\.ts?$": "ts-jest",
 	},
 	moduleDirectories: ["node_modules"],
+	resolver: "jest-ts-webcompat-resolver",
 };
 export default config;
