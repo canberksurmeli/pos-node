@@ -1,5 +1,7 @@
 import { ISO4217CurrencyCode, Provider, ProviderUrl, StoreType, TransactionType } from "./enum";
 
+export type Currency = "TRY";
+
 export type ProcessEnv = {
 	CLIENTID: string;
 	PASSWORD: string;
@@ -21,6 +23,8 @@ export type IyzicoOptions = {
 	provider: Provider.Iyzico | Provider.IyzicoTest;
 	apiKey: string;
 	secretKey: string;
+	/** @default TRY */
+	currency?: Currency;
 };
 
 export type NestpayOptions = {

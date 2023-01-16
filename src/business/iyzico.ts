@@ -1,5 +1,5 @@
 import https from "https";
-import { IyzicoOptions } from "../models/common.js";
+import { Currency, IyzicoOptions } from "../models/common.js";
 import { Provider, ProviderUrl } from "../models/enum.js";
 import {
 	AddCardResponse,
@@ -22,16 +22,19 @@ export class Iyzico {
 	public provider: Provider.Iyzico | Provider.IyzicoTest;
 	private apiKey: string;
 	private secretKey: string;
+	public currency: Currency;
 	constructor() {
 		this.provider = Provider.IyzicoTest;
 		this.apiKey = "";
 		this.secretKey = "";
+		this.currency = "TRY";
 	}
 
 	setOptions(options: IyzicoOptions): void {
 		this.provider = options.provider;
 		this.apiKey = options.apiKey;
 		this.secretKey = options.secretKey;
+		this.currency = options.currency || "TRY";
 	}
 
 	async getSavedCards(params: {
