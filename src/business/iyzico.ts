@@ -397,8 +397,9 @@ export class Iyzico {
 			item.subMerchantPrice = formatPrice(params.paidPrice) as any;
 		});
 
+		const clearedBody = removeEmptyProperties(params);
 		const result = await sendHttpsRequest({
-			body: JSON.stringify(params),
+			body: JSON.stringify(clearedBody),
 			options: {
 				hostname,
 				path: pathname,
@@ -410,7 +411,7 @@ export class Iyzico {
 					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
 					Authorization: generateIyzicoAuthorizationHeaderParamV1({
 						apiKey: this.apiKey,
-						body: convertJsonToUrlPathParameters(params),
+						body: convertJsonToUrlPathParameters(clearedBody),
 						randomString,
 						secretKey: this.secretKey,
 					}),

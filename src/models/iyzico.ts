@@ -94,7 +94,7 @@ export type IyzicoPaymentResponse = {
 	cardToken?: string;
 	cardType?: CardType;
 	cardUserKey?: string;
-	conversationId?: string
+	conversationId?: string;
 	currency: string;
 	fraudStatus: number;
 	hostReference: string;
@@ -128,7 +128,7 @@ export type GetSavedCardsResponse = {
 		cardFamily?: string;
 		cardToken: string;
 		cardType?: CardType;
-		lastFourDigits: number;
+		lastFourDigits: string;
 	}[];
 	carduserKey: string;
 	conversationId?: string;
