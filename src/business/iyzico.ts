@@ -180,7 +180,7 @@ export class Iyzico {
 	async purchase(params: {
 		locale: "tr" | "en";
 		/** orderId */
-		conversationId: string;
+		conversationId?: string;
 		/** total price without discounts @example 1.7*/
 		price: number;
 		/** price that customer will pay @example 1.2*/
@@ -247,7 +247,7 @@ export class Iyzico {
 	async purchaseWithSavedCard(params: {
 		locale: "tr" | "en";
 		/** orderId */
-		conversationId: string;
+		conversationId?: string;
 		/** total price without discounts @example 1.7*/
 		price: number;
 		/** price that customer will pay @example 1.2*/
@@ -310,7 +310,7 @@ export class Iyzico {
 	private async purchaseBase(params: {
 		locale: "tr" | "en";
 		/** orderId */
-		conversationId: string;
+		conversationId?: string;
 		/** total price without discounts @example 1.7*/
 		price: number;
 		/** price that customer will pay @example 1.2*/
