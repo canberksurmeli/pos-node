@@ -6,7 +6,10 @@ import {
 	BasketItemType,
 	DeleteCardResponse,
 	GetSavedCardsResponse,
+	Iyzico3DPaymentResponse,
+	IyzicoCard,
 	IyzicoPaymentResponse,
+	IyzicoStoredCard,
 	PaymentChannel,
 	PaymentGroup,
 } from "../models/iyzico.js";
@@ -176,7 +179,6 @@ export class Iyzico {
 		return JSON.parse(result);
 	}
 
-	/** purchaseWithSubMerchant */
 	async purchase(params: {
 		locale: "tr" | "en";
 		/** orderId */
@@ -190,162 +192,7 @@ export class Iyzico {
 		installment: number;
 		paymentChannel: PaymentChannel;
 		paymentGroup: PaymentGroup;
-		paymentCard: {
-			cardHolderName: string;
-			cardNumber: string;
-			expireYear: string;
-			expireMonth: string;
-			cvc: string;
-			/** 0-Do not Register 1-register @default 0 */
-			registerCard?: number;
-		};
-		buyer: {
-			id: string;
-			name: string;
-			surname: string;
-			identityNumber: string;
-			email: string;
-			gsmNumber?: string;
-			/** @example 2013-04-21 15:12:09 */
-			registrationDate?: string;
-			/** @example 2015-10-05 12:43:35 */
-			lastLoginDate?: string;
-			registrationAddress: string;
-			city: string;
-			country: string;
-			zipCode?: string;
-			ip: string;
-		};
-		shippingAddress: {
-			contactName: string;
-			address: string;
-			city: string;
-			country: string;
-			zipCode?: string;
-		};
-		billingAddress: {
-			contactName: string;
-			address: string;
-			city: string;
-			country: string;
-			zipCode?: string;
-		};
-		basketItems: {
-			id: string;
-			price: number;
-			name: string;
-			category1: string;
-			category2?: string; //optional
-			itemType: BasketItemType;
-			subMerchantKey?: string;
-			subMerchantPrice?: number;
-		}[];
-	}): Promise<IyzicoPaymentResponse> {
-		return this.purchaseBase(params);
-	}
-
-	async purchaseWithSavedCard(params: {
-		locale: "tr" | "en";
-		/** orderId */
-		conversationId?: string;
-		/** total price without discounts @example 1.7*/
-		price: number;
-		/** price that customer will pay @example 1.2*/
-		paidPrice: number;
-		/** @default 1*/
-		currency: "TRY";
-		installment: number;
-		paymentChannel: PaymentChannel;
-		paymentGroup: PaymentGroup;
-		/** 0-Do not Register 1-register @default 0*/
-		paymentCard: {
-			cardUserKey: string;
-			cardToken: string;
-		};
-		buyer: {
-			id: string;
-			name: string;
-			surname: string;
-			identityNumber: string;
-			email: string;
-			gsmNumber?: string;
-			/** @example 2013-04-21 15:12:09 */
-			registrationDate?: string;
-			/** @example 2015-10-05 12:43:35 */
-			lastLoginDate?: string;
-			registrationAddress: string;
-			city: string;
-			country: string;
-			zipCode?: string;
-			ip: string;
-		};
-		shippingAddress: {
-			contactName: string;
-			address: string;
-			city: string;
-			country: string;
-			zipCode?: string;
-		};
-		billingAddress: {
-			contactName: string;
-			address: string;
-			city: string;
-			country: string;
-			zipCode?: string;
-		};
-		basketItems: {
-			id: string;
-			price: number;
-			name: string;
-			category1: string;
-			category2?: string; //optional
-			itemType: BasketItemType;
-			subMerchantKey: string;
-			subMerchantPrice: number;
-		}[];
-	}): Promise<IyzicoPaymentResponse> {
-		return this.purchaseBase(params);
-	}
-
-	private async purchaseBase(params: {
-		locale: "tr" | "en";
-		/** orderId */
-		conversationId?: string;
-		/** total price without discounts @example 1.7*/
-		price: number;
-		/** price that customer will pay @example 1.2*/
-		paidPrice: number;
-		/** @default 1*/
-		currency: "TRY";
-		installment: number;
-		paymentChannel: PaymentChannel;
-		paymentGroup: PaymentGroup;
-		/**
-		 * @description
-		 *
-		 * For registed card
-		 * @param cardUserKey  required
-		 * @param cardToken 	required
-		 *
-		 * For normal payment
-		 * @param cardHolderName required
-		 * @param cardNumber 	 required
-		 * @param expireYear 	 required
-		 * @param expireMonth 	 required
-		 * @param cvc 		 	 required
-		 *
-		 */
-		paymentCard: {
-			cardUserKey?: string;
-			cardToken?: string;
-			cardHolderName?: string;
-			cardNumber?: string;
-			expireYear?: string;
-			expireMonth?: string;
-			cvc?: string;
-			/** 0-Do not Register 1-register @default 0 */
-			registerCard?: number;
-		};
+		paymentCard: IyzicoCard | IyzicoStoredCard;
 		buyer: {
 			id: string;
 			name: string;
@@ -422,7 +269,7 @@ export class Iyzico {
 		return JSON.parse(result);
 	}
 
-	private async purchase3DBase(params: {
+	public async purchase3D(params: {
 		locale: "tr" | "en";
 		/** orderId */
 		conversationId: string;
@@ -437,17 +284,7 @@ export class Iyzico {
 		paymentGroup: PaymentGroup;
 		/** @example https://test.io/callback */
 		callbackUrl: string;
-		paymentCard: {
-			cardHolderName?: string;
-			cardNumber?: string;
-			expireYear?: string;
-			expireMonth?: string;
-			cvc?: string;
-			cardUserKey?: string;
-			cardToken?: string;
-			/** 0-Do not Register 1-register @default 0 */
-			registerCard?: number;
-		};
+		paymentCard: IyzicoCard | IyzicoStoredCard;
 		buyer: {
 			id: string;
 			name: string;
@@ -489,7 +326,7 @@ export class Iyzico {
 			subMerchantKey?: string;
 			subMerchantPrice?: number;
 		}[];
-	}) {
+	}): Promise<Iyzico3DPaymentResponse> {
 		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/payment/3dsecure/initialize");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
 		if (!params.installment) {
@@ -524,143 +361,7 @@ export class Iyzico {
 				},
 			} as https.RequestOptions,
 		});
-		const responseJson = JSON.parse(response);
-		if (responseJson.errorMessage) {
-			throw new Error(response);
-		}
-		return Buffer.from(JSON.parse(response).threeDSHtmlContent, "base64").toString();
-	}
 
-	/** purchase3DWithSubMerchant */
-	async purchase3D(params: {
-		locale: "tr" | "en";
-		/** orderId */
-		conversationId: string;
-		/** total price without discounts @example 1.7*/
-		price: number;
-		/** price that customer will pay @example 1.2*/
-		paidPrice: number;
-		/** @default 1*/
-		currency: "TRY";
-		installment: number;
-		paymentChannel: PaymentChannel;
-		paymentGroup: PaymentGroup;
-		/** @example https://test.io/callback */
-		callbackUrl: string;
-		paymentCard: {
-			cardHolderName: string;
-			cardNumber: string;
-			expireYear: string;
-			expireMonth: string;
-			cvc: string;
-			/** 0-Do not Register 1-register @default 0 */
-			registerCard?: number;
-		};
-		buyer: {
-			id: string;
-			name: string;
-			surname: string;
-			identityNumber: string;
-			email: string;
-			gsmNumber?: string;
-			/** @example 2013-04-21 15:12:09 */
-			registrationDate?: string;
-			/** @example 2015-10-05 12:43:35 */
-			lastLoginDate?: string;
-			registrationAddress: string;
-			city: string;
-			country: string;
-			zipCode?: string;
-			ip: string;
-		};
-		shippingAddress: {
-			contactName: string;
-			address: string;
-			city: string;
-			country: string;
-			zipCode?: string;
-		};
-		billingAddress: {
-			contactName: string;
-			address: string;
-			city: string;
-			country: string;
-			zipCode?: string;
-		};
-		basketItems: {
-			id: string;
-			price: number;
-			name: string;
-			category1: string;
-			category2?: string; //optional
-			itemType: BasketItemType;
-			subMerchantKey?: string;
-			subMerchantPrice?: number;
-		}[];
-	}): Promise<string> {
-		return this.purchase3DBase(params);
-	}
-	async purchase3DWithSavedCard(params: {
-		locale: "tr" | "en";
-		/** orderId */
-		conversationId: string;
-		/** total price without discounts @example 1.7*/
-		price: number;
-		/** price that customer will pay @example 1.2*/
-		paidPrice: number;
-		/** @default 1*/
-		currency: "TRY";
-		installment: number;
-		paymentChannel: PaymentChannel;
-		paymentGroup: PaymentGroup;
-		/** @example https://test.io/callback */
-		callbackUrl: string;
-		paymentCard: {
-			cardUserKey: string;
-			cardToken: string;
-		};
-		buyer: {
-			id: string;
-			name: string;
-			surname: string;
-			identityNumber: string;
-			email: string;
-			gsmNumber?: string;
-			/** @example 2013-04-21 15:12:09 */
-			registrationDate?: string;
-			/** @example 2015-10-05 12:43:35 */
-			lastLoginDate?: string;
-			registrationAddress: string;
-			city: string;
-			country: string;
-			zipCode?: string;
-			ip: string;
-		};
-		shippingAddress: {
-			contactName: string;
-			address: string;
-			city: string;
-			country: string;
-			zipCode?: string;
-		};
-		billingAddress: {
-			contactName: string;
-			address: string;
-			city: string;
-			country: string;
-			zipCode?: string;
-		};
-		basketItems: {
-			id: string;
-			price: number;
-			name: string;
-			category1: string;
-			category2?: string; //optional
-			itemType: BasketItemType;
-			subMerchantKey?: string;
-			subMerchantPrice?: number;
-		}[];
-	}): Promise<string> {
-		return this.purchase3DBase(params);
+		return JSON.parse(response);
 	}
 }

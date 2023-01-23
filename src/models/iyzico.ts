@@ -1,3 +1,5 @@
+import { Currency } from "./common.js";
+
 export enum PaymentChannel {
 	MOBILE = "MOBILE",
 	WEB = "WEB",
@@ -92,17 +94,51 @@ export type IyzicoPaymentResponse = {
 	binNumber: string;
 	cardAssociation?: CardAssociation;
 	cardToken?: string;
-	cardType?: CardType;
 	cardUserKey?: string;
+	cardFamily?: CardFamily;
+	cardType?: CardType;
 	conversationId?: string;
 	currency: string;
 	fraudStatus: number;
 	hostReference: string;
 	installment: number;
-	itemTransactions: {}[];
+	itemTransactions: {
+		blockageRate: number;
+		blockageRateAmountMerchant: number;
+		blockageRateAmountSubMerchant: number;
+		/** e.g. format "2023-01-31 00:00:00" */
+		blockageResolvedDate: Date;
+		convertedPayout: {
+			blockageRateAmountMerchant: number;
+			blockageRateAmountSubMerchant: number;
+			currency: Currency;
+			iyziCommissionFee: number;
+			iyziCommissionRateAmount: number;
+			iyziConversionRate: number;
+			iyziConversionRateAmount: number;
+			merchantPayoutAmount: number;
+			paidPrice: number;
+			subMerchantPayoutAmount: number;
+		};
+		itemId: string;
+		iyziCommissionFee: number;
+		iyziCommissionRateAmount: number;
+		merchantCommissionRate: number;
+		merchantCommissionRateAmount: number;
+		merchantPayoutAmount: number;
+		paidPrice: number;
+		paymentTransactionId: string;
+		price: number;
+		subMerchantKey: string;
+		subMerchantPayoutAmount: number;
+		subMerchantPayoutRate: number;
+		subMerchantPrice: number;
+		transactionStatus: number;
+	}[];
 	iyziCommissionFee: number;
 	iyziCommissionRateAmount: number;
 	lastFourDigits: string;
+	locale: string;
 	merchantCommissionRate: number;
 	merchantCommissionRateAmount: number;
 	paidPrice: number;
@@ -110,11 +146,46 @@ export type IyzicoPaymentResponse = {
 	phase: string;
 	price: number;
 	status: Status;
+	systemTime: number;
 	errorCode?: string;
 	errorMessage?: string;
 	errorGroup?: string;
+};
+
+export type Iyzico3DPaymentResponse = {
+	conversationId?: string;
+	errorCode?: string;
+	errorMessage?: string;
 	locale: string;
+	threeDSHtmlContent?: string;
+	status: Status;
 	systemTime: number;
+	/** base64 format html content */
+};
+
+export type Iyzico3DPaymentCallbackResponse = {
+	conversationData: string;
+	conversationId: string;
+	mdStatus: string;
+	paymentId: string;
+	status: Status;
+};
+
+export type IyzicoCard = {
+	cardHolderName: string;
+	cardNumber: string;
+	expireYear: string;
+	expireMonth: string;
+	cvc: string;
+	/** 0-Do not Register 1-register @default 0 */
+	registerCard?: number;
+};
+
+export type IyzicoStoredCard = {
+	cardUserKey: string;
+	cardToken: string;
+	/** 0-Do not Register 1-register @default 0 */
+	registerCard?: number;
 };
 
 export type GetSavedCardsResponse = {
