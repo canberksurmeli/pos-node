@@ -11,14 +11,14 @@ import {
 	IyzicoPaymentResponse,
 	IyzicoStoredCard,
 	PaymentChannel,
-	PaymentGroup,
+	PaymentGroup
 } from "../models/iyzico.js";
 import {
 	convertJsonToUrlPathParameters,
 	formatPrice,
 	generateIyzicoAuthorizationHeaderParamV1,
 	removeEmptyProperties,
-	sendHttpsRequest,
+	sendHttpsRequest
 } from "../utils.js";
 
 export class Iyzico {
@@ -245,7 +245,6 @@ export class Iyzico {
 			if (item.subMerchantPrice) item.subMerchantPrice = formatPrice(item.subMerchantPrice) as any;
 		});
 		const clearedBody = removeEmptyProperties(params);
-		console.log(convertJsonToUrlPathParameters(clearedBody));
 		const result = await sendHttpsRequest({
 			body: JSON.stringify(clearedBody),
 			options: {
@@ -338,7 +337,6 @@ export class Iyzico {
 		});
 
 		const clearedBody = removeEmptyProperties(params);
-		console.log(convertJsonToUrlPathParameters(clearedBody));
 		const response = await sendHttpsRequest({
 			body: JSON.stringify(clearedBody),
 			options: {
@@ -361,6 +359,40 @@ export class Iyzico {
 			} as https.RequestOptions,
 		});
 
+		return JSON.parse(response);
+	}
+
+	public async complete3D(params: {
+		paymentId: string;
+		conversationData?: string;
+		conversationId?: string;
+		locale?: string;
+	}): Promise<IyzicoPaymentResponse> {
+		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/payment/3dsecure/auth/basic");
+		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
+		const clearedBody = removeEmptyProperties(params);
+
+		const response = await sendHttpsRequest({
+			body: JSON.stringify(clearedBody),
+			options: {
+				hostname,
+				path: pathname,
+				method: "POST",
+				headers: {
+					/** random header name */
+					["x-iyzi-rnd"]: randomString,
+					/** client version */
+					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
+					Authorization: generateIyzicoAuthorizationHeaderParamV1({
+						apiKey: this.apiKey,
+						body: convertJsonToUrlPathParameters(clearedBody),
+						randomString,
+						secretKey: this.secretKey,
+					}),
+					"content-type": "application/json",
+				},
+			} as https.RequestOptions,
+		});
 		return JSON.parse(response);
 	}
 }
