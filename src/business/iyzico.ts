@@ -80,7 +80,7 @@ export class Iyzico {
 
 	async saveCard(params: {
 		card: {
-			alias: string;
+			alias?: string;
 			holderName: string;
 			number: string;
 			expireMonth: string;
@@ -105,13 +105,14 @@ export class Iyzico {
 			email: params.email,
 			cardUserKey: params.userKey,
 			card: {
-				cardAlias: params.card.alias,
+				cardAlias: params.card?.alias,
 				cardNumber: params.card.number,
 				expireYear: params.card.expireYear,
 				expireMonth: params.card.expireMonth,
 				cardHolderName: params.card.holderName,
 			},
 		};
+		if (!body.card.cardAlias) delete body.card.cardAlias;
 		const clearedBody = removeEmptyProperties(body);
 		const result = await sendHttpsRequest({
 			body: JSON.stringify(clearedBody),
@@ -240,11 +241,11 @@ export class Iyzico {
 		params.price = formatPrice(params.price) as any;
 		params.paidPrice = formatPrice(params.paidPrice) as any;
 		params.basketItems.forEach((item) => {
-			item.price = formatPrice(params.paidPrice) as any;
-			item.subMerchantPrice = formatPrice(params.paidPrice) as any;
+			item.price = formatPrice(item.price) as any;
+			if (item.subMerchantPrice) item.subMerchantPrice = formatPrice(item.subMerchantPrice) as any;
 		});
-
 		const clearedBody = removeEmptyProperties(params);
+		console.log(convertJsonToUrlPathParameters(clearedBody));
 		const result = await sendHttpsRequest({
 			body: JSON.stringify(clearedBody),
 			options: {
@@ -282,8 +283,6 @@ export class Iyzico {
 		installment: number;
 		paymentChannel: PaymentChannel;
 		paymentGroup: PaymentGroup;
-		/** @example https://test.io/callback */
-		callbackUrl: string;
 		paymentCard: IyzicoCard | IyzicoStoredCard;
 		buyer: {
 			id: string;
@@ -326,22 +325,22 @@ export class Iyzico {
 			subMerchantKey?: string;
 			subMerchantPrice?: number;
 		}[];
+		/** @example https://test.io/callback */
+		callbackUrl: string;
 	}): Promise<Iyzico3DPaymentResponse> {
 		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/payment/3dsecure/initialize");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
-		if (!params.installment) {
-			params.installment = 1;
-		}
-
 		params.price = formatPrice(params.price) as any;
 		params.paidPrice = formatPrice(params.paidPrice) as any;
 		params.basketItems.forEach((item) => {
-			item.price = formatPrice(params.paidPrice) as any;
-			item.subMerchantPrice = formatPrice(params.paidPrice) as any;
+			item.price = formatPrice(item.price) as any;
+			if (item.subMerchantPrice) item.subMerchantPrice = formatPrice(item.subMerchantPrice) as any;
 		});
 
+		const clearedBody = removeEmptyProperties(params);
+		console.log(convertJsonToUrlPathParameters(clearedBody));
 		const response = await sendHttpsRequest({
-			body: JSON.stringify(params),
+			body: JSON.stringify(clearedBody),
 			options: {
 				hostname,
 				path: pathname,
@@ -353,7 +352,7 @@ export class Iyzico {
 					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
 					Authorization: generateIyzicoAuthorizationHeaderParamV1({
 						apiKey: this.apiKey,
-						body: convertJsonToUrlPathParameters(params),
+						body: convertJsonToUrlPathParameters(clearedBody),
 						randomString,
 						secretKey: this.secretKey,
 					}),
