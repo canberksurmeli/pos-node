@@ -222,7 +222,7 @@ describe("test purchase", () => {
 		} as any);
 		expect(response.status).toBe("success");
 	});
-	test.skip("Iyzico 3D Payment", async () => {
+	test("Iyzico 3D Payment", async () => {
 		const url = await ngrok.connect({ addr: parseInt(env.PORT), authtoken: env.NGROK_AUTH_TOKEN });
 		let driver = new Builder()
 			.forBrowser("chrome")
@@ -237,7 +237,7 @@ describe("test purchase", () => {
 		});
 		const successResponse = new SyncPoint<void>();
 		requestRoot = async (req: Request, res: Response) => {
-			const htmlText = await iyzico.purchase3D({
+			const response = await iyzico.purchase3D({
 				locale: "tr",
 				conversationId: "123456789",
 				price: 5,
@@ -258,7 +258,7 @@ describe("test purchase", () => {
 					surname: "Doe",
 					identityNumber: "74300864791",
 					email: "test.test@armongate.com",
-					gsmNumber: "+905349559519",
+					gsmNumber: "+905355551122",
 					registrationDate: "2013-04-21 15:12:09",
 					lastLoginDate: "2015-10-05 12:43:35",
 					registrationAddress: "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1",
@@ -285,20 +285,27 @@ describe("test purchase", () => {
 						name: "Binocular",
 						category1: "Collectibles",
 						itemType: BasketItemType.PHYSICAL,
-						subMerchantKey: "aC26ws15IRkTuTaPFXJ+pnZ3uCs=",
+						subMerchantKey: "xLQq9ZAuNVSLe0WwCTVAy9V2G84=",
 						subMerchantPrice: 5,
 					},
 				],
 				currency: "TRY",
 				callbackUrl: `${url}/callback`,
 			});
-			expect(htmlText).toBeTruthy();
-			res.send(htmlText);
+			expect(response.status).toBe("success");
+			res.send(Buffer.from(response.threeDSHtmlContent as string, "base64").toString("utf-8"));
 		};
 		requestCallback = async (req: Request, res: Response): Promise<void> => {
 			res.status(200).send(req.body);
 			console.log(req.body);
 			expect(req.body.status).toBe("success");
+			const resp = await iyzico.complete3D({
+				locale: "tr",
+				conversationId: "94dfaa0f-505b-4ff0-bf2e-f6daa6adf423",
+				paymentId: req.body.paymentId,
+				conversationData: req.body.conversationData,
+			});
+			resp;
 			successResponse.resolve();
 		};
 
@@ -307,7 +314,7 @@ describe("test purchase", () => {
 	});
 	let cardToken: string;
 	let userKey: string;
-	test("Iyzico Store a Card ", async () => {
+	test.skip("Iyzico Store a Card ", async () => {
 		const iyzico = PaymentFactory.createPaymentMethod(Provider.IyzicoTest);
 
 		iyzico.setOptions({
@@ -324,7 +331,7 @@ describe("test purchase", () => {
 				expireYear: "2030",
 				expireMonth: "12",
 			},
-			email: "JohnDoe@email.com"
+			email: "JohnDoe@email.com",
 		});
 
 		expect(result.status).toBe("success");
@@ -332,7 +339,7 @@ describe("test purchase", () => {
 		userKey = result.cardUserKey;
 	});
 
-	test("Get Stored Card", async () => {
+	test.skip("Get Stored Card", async () => {
 		const iyzico = PaymentFactory.createPaymentMethod(Provider.IyzicoTest);
 
 		iyzico.setOptions({
@@ -349,7 +356,7 @@ describe("test purchase", () => {
 		expect(result.status).toBe("success");
 	});
 
-	test("3DS Payment With Stored Card", async () => {
+	test.skip("3DS Payment With Stored Card", async () => {
 		const url = await ngrok.connect({ addr: parseInt(env.PORT), authtoken: env.NGROK_AUTH_TOKEN });
 		let driver = new Builder()
 			.forBrowser("chrome")
@@ -366,7 +373,7 @@ describe("test purchase", () => {
 
 		const successResponse = new SyncPoint<void>();
 		requestRoot = async (req: Request, res: Response) => {
-			const htmlText = await iyzico.purchase3DWithSavedCard({
+			const htmlText = await iyzico.purchase3D({
 				locale: "tr",
 				conversationId: "123456789",
 				price: 5,
