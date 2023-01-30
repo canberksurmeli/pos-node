@@ -363,12 +363,12 @@ export class Iyzico {
 	}
 
 	public async complete3D(params: {
+		locale?: string;
+		conversationId?: string;
 		paymentId: string;
 		conversationData?: string;
-		conversationId?: string;
-		locale?: string;
 	}): Promise<IyzicoPaymentResponse> {
-		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/payment/3dsecure/auth/basic");
+		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/payment/3dsecure/auth");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
 		const clearedBody = removeEmptyProperties(params);
 
