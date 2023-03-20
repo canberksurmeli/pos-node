@@ -169,6 +169,8 @@ export type Iyzico3DPaymentCallbackResponse = {
 	mdStatus: string;
 	paymentId: string;
 	status: Status;
+	errorCode?: string;
+	errorMessage?: string;
 };
 
 export type IyzicoCard = {
