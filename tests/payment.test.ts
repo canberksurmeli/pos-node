@@ -214,7 +214,7 @@ describe("test purchase", () => {
 					name: "Parking Payment",
 					category1: "Parking",
 					itemType: BasketItemType.VIRTUAL,
-					subMerchantKey: "aC26ws15IRkTuTaPFXJ+pnZ3uCs=",
+					subMerchantKey: "xLQq9ZAuNVSLe0WwCTVAy9V2G84=",
 					subMerchantPrice: 0.5,
 				},
 			],
@@ -331,7 +331,10 @@ describe("test purchase", () => {
 				expireYear: "2030",
 				expireMonth: "12",
 			},
+			conversationId: "1234",
 			email: "JohnDoe@email.com",
+			externalId: "123456789",
+			locale: "tr",
 		});
 
 		expect(result.status).toBe("success");
@@ -451,6 +454,7 @@ describe("test purchase", () => {
 		const result = await iyzico.deleteCard({
 			cardToken: cardToken,
 			cardUserKey: userKey,
+			conversationId: "8d052a84-5b66-475d-8dbc-761db571f91c",
 		});
 		expect(result.status).toBe("success");
 	});

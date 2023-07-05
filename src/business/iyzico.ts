@@ -11,14 +11,19 @@ import {
 	IyzicoPaymentResponse,
 	IyzicoStoredCard,
 	PaymentChannel,
-	PaymentGroup
+	PaymentGroup,
 } from "../models/iyzico.js";
 import {
-	convertJsonToUrlPathParameters,
+	convertMapToObject,
+	convertMapToUrlPathParameters,
+	createHashMapFromObjectForComplete3D,
+	createHashMapFromObjectForDeleteSavedCard,
+	createHashMapFromObjectForGetSavedCard,
+	createHashMapFromObjectForPurchase,
+	createHashMapFromObjectForSaveCard,
 	formatPrice,
 	generateIyzicoAuthorizationHeaderParamV1,
-	removeEmptyProperties,
-	sendHttpsRequest
+	sendHttpsRequest,
 } from "../utils.js";
 
 export class Iyzico {
@@ -48,14 +53,9 @@ export class Iyzico {
 	}): Promise<GetSavedCardsResponse> {
 		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/cardstorage/cards");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
-		const body = {
-			locale: params.locale,
-			conversationId: params.conversationId,
-			cardUserKey: params.cardUserKey,
-		};
-		const clearedBody = removeEmptyProperties(body);
+		const map = createHashMapFromObjectForGetSavedCard(params);
 		const result = await sendHttpsRequest({
-			body: JSON.stringify(clearedBody),
+			body: JSON.stringify(convertMapToObject(map)),
 			options: {
 				hostname,
 				path: pathname,
@@ -67,7 +67,7 @@ export class Iyzico {
 					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
 					Authorization: generateIyzicoAuthorizationHeaderParamV1({
 						apiKey: this.apiKey,
-						body: convertJsonToUrlPathParameters(clearedBody),
+						body: convertMapToUrlPathParameters(map),
 						randomString,
 						secretKey: this.secretKey,
 					}),
@@ -98,24 +98,9 @@ export class Iyzico {
 	}): Promise<AddCardResponse> {
 		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/cardstorage/card");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
-		const body = {
-			locale: params.locale,
-			conversationId: params.conversationId,
-			externalId: params.externalId,
-			email: params.email,
-			cardUserKey: params.userKey,
-			card: {
-				cardAlias: params.card?.alias,
-				cardNumber: params.card.number,
-				expireYear: params.card.expireYear,
-				expireMonth: params.card.expireMonth,
-				cardHolderName: params.card.holderName,
-			},
-		};
-		if (!body.card.cardAlias) delete body.card.cardAlias;
-		const clearedBody = removeEmptyProperties(body);
+		const map = createHashMapFromObjectForSaveCard(params);
 		const result = await sendHttpsRequest({
-			body: JSON.stringify(clearedBody),
+			body: JSON.stringify(convertMapToObject(map)),
 			options: {
 				hostname,
 				path: pathname,
@@ -127,7 +112,7 @@ export class Iyzico {
 					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
 					Authorization: generateIyzicoAuthorizationHeaderParamV1({
 						apiKey: this.apiKey,
-						body: convertJsonToUrlPathParameters(clearedBody),
+						body: convertMapToUrlPathParameters(map),
 						randomString,
 						secretKey: this.secretKey,
 					}),
@@ -146,15 +131,8 @@ export class Iyzico {
 	}): Promise<DeleteCardResponse> {
 		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/cardstorage/card");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
-
-		const body = {
-			locale: params.locale,
-			conversationId: params.conversationId,
-			cardUserKey: params.cardUserKey,
-			cardToken: params.cardToken,
-		};
-		const clearedBody = removeEmptyProperties(body);
-		const stringBody = JSON.stringify(clearedBody);
+		const map = createHashMapFromObjectForDeleteSavedCard(params);
+		const stringBody = JSON.stringify(convertMapToObject(map));
 		const result = await sendHttpsRequest({
 			body: stringBody,
 			options: {
@@ -168,7 +146,7 @@ export class Iyzico {
 					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
 					Authorization: generateIyzicoAuthorizationHeaderParamV1({
 						apiKey: this.apiKey,
-						body: convertJsonToUrlPathParameters(clearedBody),
+						body: convertMapToUrlPathParameters(map),
 						randomString,
 						secretKey: this.secretKey,
 					}),
@@ -244,9 +222,9 @@ export class Iyzico {
 			item.price = formatPrice(item.price) as any;
 			if (item.subMerchantPrice) item.subMerchantPrice = formatPrice(item.subMerchantPrice) as any;
 		});
-		const clearedBody = removeEmptyProperties(params);
+		const map = createHashMapFromObjectForPurchase(params);
 		const result = await sendHttpsRequest({
-			body: JSON.stringify(clearedBody),
+			body: JSON.stringify(convertMapToObject(map)),
 			options: {
 				hostname,
 				path: pathname,
@@ -258,7 +236,7 @@ export class Iyzico {
 					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
 					Authorization: generateIyzicoAuthorizationHeaderParamV1({
 						apiKey: this.apiKey,
-						body: convertJsonToUrlPathParameters(clearedBody),
+						body: convertMapToUrlPathParameters(map),
 						randomString,
 						secretKey: this.secretKey,
 					}),
@@ -272,7 +250,7 @@ export class Iyzico {
 	public async purchase3D(params: {
 		locale: "tr" | "en";
 		/** orderId */
-		conversationId: string;
+		conversationId?: string;
 		/** total price without discounts @example 1.7*/
 		price: number;
 		/** price that customer will pay @example 1.2*/
@@ -336,9 +314,9 @@ export class Iyzico {
 			if (item.subMerchantPrice) item.subMerchantPrice = formatPrice(item.subMerchantPrice) as any;
 		});
 
-		const clearedBody = removeEmptyProperties(params);
+		const map = createHashMapFromObjectForPurchase(params);
 		const response = await sendHttpsRequest({
-			body: JSON.stringify(clearedBody),
+			body: JSON.stringify(convertMapToObject(map)),
 			options: {
 				hostname,
 				path: pathname,
@@ -350,7 +328,7 @@ export class Iyzico {
 					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
 					Authorization: generateIyzicoAuthorizationHeaderParamV1({
 						apiKey: this.apiKey,
-						body: convertJsonToUrlPathParameters(clearedBody),
+						body: convertMapToUrlPathParameters(map),
 						randomString,
 						secretKey: this.secretKey,
 					}),
@@ -370,10 +348,10 @@ export class Iyzico {
 	}): Promise<IyzicoPaymentResponse> {
 		const { hostname, pathname } = new URL(ProviderUrl[this.provider] + "/payment/3dsecure/auth");
 		const randomString = process.hrtime()[0] + Math.random().toString(8).slice(2);
-		const clearedBody = removeEmptyProperties(params);
 
+		const map = createHashMapFromObjectForComplete3D(params);
 		const response = await sendHttpsRequest({
-			body: JSON.stringify(clearedBody),
+			body: JSON.stringify(convertMapToObject(map)),
 			options: {
 				hostname,
 				path: pathname,
@@ -385,7 +363,7 @@ export class Iyzico {
 					["x-iyzi-client-version"]: "iyzipay-node-2.0.48",
 					Authorization: generateIyzicoAuthorizationHeaderParamV1({
 						apiKey: this.apiKey,
-						body: convertJsonToUrlPathParameters(clearedBody),
+						body: convertMapToUrlPathParameters(map),
 						randomString,
 						secretKey: this.secretKey,
 					}),

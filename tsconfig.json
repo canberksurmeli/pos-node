@@ -14,6 +14,7 @@
 		"noUnusedLocals": false,
 		"outDir": "dist",
 		"sourceMap": true,
+		"downlevelIteration": true,
 		"strict": true,
 		"paths": {
 			"@jest/": ["./node_modules/@jest"]

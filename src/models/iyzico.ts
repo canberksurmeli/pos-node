@@ -186,8 +186,6 @@ export type IyzicoCard = {
 export type IyzicoStoredCard = {
 	cardUserKey: string;
 	cardToken: string;
-	/** 0-Do not Register 1-register @default 0 */
-	registerCard?: number;
 };
 
 export type GetSavedCardsResponse = {
